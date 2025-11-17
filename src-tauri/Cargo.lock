@@ -48,6 +48,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 
 [[package]]
+name = "anymap2"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d301b3b94cb4b2f23d7917810addbbaff90738e0ca2be692bd027e70d7e0330c"
+
+[[package]]
 name = "async-broadcast"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1975,6 +1981,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "shaku",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
@@ -3280,6 +3287,28 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "shaku"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d599314a26c92706bde1c984391b1eeb77ebf46e23142216a58eacb6e12f858b"
+dependencies = [
+ "anymap2",
+ "once_cell",
+ "shaku_derive",
+]
+
+[[package]]
+name = "shaku_derive"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "524f791f1f958b9c1825c1e48657d3bc485ee9ac4a1c7c226ab7fc7010afa7dc"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

@@ -1,12 +1,26 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use shaku::HasComponent;
+use tauri::{Manager, State};
+
+use crate::services::{greet::GreetService, Container};
+
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+fn greet(state: State<'_, Container>, name: &str) -> String {
+    let greet_service: &dyn GreetService = state.resolve_ref();
+
+    greet_service.greet(name)
 }
+
+pub mod services;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let container = Container::builder().build();
+
     tauri::Builder::default()
+        .setup(move |app| {
+            app.manage(container);
+            Ok(())
+        })
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
