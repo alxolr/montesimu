@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "montesimu",
+  "productName": "Montesimu",
   "version": "0.1.0",
   "identifier": "com.alxolr.montesimu",
   "build": {
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "montesimu",
-        "width": 800,
-        "height": 600
+        "title": "Montesimu",
+        "width": 1280,
+        "height": 720
       }
     ],
     "security": {
