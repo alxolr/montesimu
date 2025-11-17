@@ -6,7 +6,7 @@ import {
 import { provideRouter } from "@angular/router";
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
-import Aura from '@primeuix/themes/aura';
+import Preset from '@primeuix/themes/lara';
 
 import { routes } from "./app.routes";
 
@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     providePrimeNG({
       theme: {
-        preset: Aura,
+        preset: Preset,
         options: {
           darkModeSelector: false // This forces light mode
         }
