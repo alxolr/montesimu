@@ -27,7 +27,6 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
-
   initializeChart(): void {
     const backgrounds = ['rgba(9, 76, 124, 0.2)'];
     const borders = ['rgba(9, 76, 124, 1)'];

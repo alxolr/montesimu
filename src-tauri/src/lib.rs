@@ -1,6 +1,7 @@
 use shaku::HasComponent;
 use tauri::{Manager, State};
 
+use crate::commands::histogram;
 use crate::services::{greet::GreetService, Container};
 
 #[tauri::command]
@@ -10,6 +11,8 @@ fn greet(state: State<'_, Container>, name: &str) -> String {
     greet_service.greet(name)
 }
 
+pub mod commands;
+pub mod dtos;
 pub mod services;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -22,7 +25,10 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            histogram::generate_histogram
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

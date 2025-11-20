@@ -1,12 +1,13 @@
 pub mod greet;
+pub mod histogram;
 
 use shaku::module;
 
-use crate::services::greet::GreetServiceImpl;
+use crate::services::{greet::GreetServiceImpl, histogram::HistogramServiceImpl};
 
 module! {
     pub Container {
-        components = [GreetServiceImpl],
+        components = [GreetServiceImpl, HistogramServiceImpl],
         providers = []
     }
 }
