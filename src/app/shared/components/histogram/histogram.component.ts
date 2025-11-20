@@ -1,5 +1,5 @@
 
-import { Component, OnInit, PLATFORM_ID, ChangeDetectorRef, inject, effect } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 
@@ -9,27 +9,38 @@ import { ChartModule } from 'primeng/chart';
   standalone: true,
   imports: [ChartModule, CardModule]
 })
-export class HistogramComponent {
+export class HistogramComponent implements OnInit, OnChanges {
+  @Input() labels: string[] = [];
+  @Input() dataValues: number[] = [];
+  @Input() title: string = 'Histogram';
+
   data: any;
   options: any;
 
-  constructor(private cd: ChangeDetectorRef) {
+  ngOnInit(): void {
+    this.initializeChart();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['labels'] || changes['dataValues'] || changes['title']) {
+      this.initializeChart();
+    }
+  }
 
 
+  initializeChart(): void {
+    const backgrounds = ['rgba(9, 76, 124, 0.2)'];
+    const borders = ['rgba(9, 76, 124, 1)'];
 
     this.data = {
-      labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', "August", "September", "October", "November", "December"],
+      labels: this.labels,
       datasets: [
         {
-          label: 'My First dataset',
-          backgroundColor: [
-            'rgba(54, 162, 235, 0.2)', // 70% opacity
-          ],
-          borderColor: [
-            'rgba(54, 162, 235, 1)',
-          ],
+          label: this.title,
+          backgroundColor: backgrounds,
+          borderColor: borders,
           borderWidth: 1,
-          data: [65, 59, 80, 81, 56, 55, 40, 45, 50, 55, 60, 65]
+          data: this.dataValues
         },
       ]
     };
