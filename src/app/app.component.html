@@ -1,72 +1,16 @@
 <div class="container mx-auto p-6">
-  <h1 class="text-3xl font-bold underline">Hello world!</h1>
-  <h1 class="text-2xl font-semibold mb-6">Welcome to Tauri + Angular!</h1>
-
-  <!-- PrimeNG Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-    <p-card
-      header="PrimeNG Card"
-      subheader="With subtitle"
-      [style]="{ width: '100%' }"
-    >
-      <p>This is a PrimeNG card with some content inside.</p>
-      <ng-template pTemplate="footer">
-        <p-button label="Action" icon="pi pi-check"></p-button>
-      </ng-template>
-    </p-card>
-
-    <p-card header="Another Card" [style]="{ width: '100%' }">
-      <p>Card content goes here with useful information.</p>
-    </p-card>
-
-    <p-card header="Third Card" [style]="{ width: '100%' }">
-      <p>More card content with Tailwind and PrimeNG styling.</p>
-    </p-card>
-  </div>
-
-  <!-- Tailwind CSS Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-    <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-      <h3 class="text-xl font-bold mb-2">Tailwind Card</h3>
-      <p class="text-gray-600">
-        A simple card built with Tailwind CSS utilities.
-      </p>
-      <button
-        class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
-        Learn More
-      </button>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <form class="row" (submit)="greet($event, greetInput.value)">
+        <input #greetInput id="greet-input" placeholder="Enter a name..." />
+        <button type="submit">Greet</button>
+      </form>
+      <p>{{ greetingMessage }}</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-      <h3 class="text-xl font-bold mb-2">Custom Card</h3>
-      <p class="text-gray-600">
-        Another card with custom styling using Tailwind.
-      </p>
-      <button
-        class="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-      >
-        Action
-      </button>
+    <div>
+      <app-histogram />
     </div>
-
-    <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-      <h3 class="text-xl font-bold mb-2">Info Card</h3>
-      <p class="text-gray-600">Display important information in this card.</p>
-      <button
-        class="mt-4 bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-      >
-        Details
-      </button>
-    </div>
-  </div>
-
-  <div class="card">
-    <form class="row" (submit)="greet($event, greetInput.value)">
-      <p-input #greetInput id="greet-input" placeholder="Enter a name..." />
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetingMessage }}</p>
   </div>
 
   <router-outlet />
