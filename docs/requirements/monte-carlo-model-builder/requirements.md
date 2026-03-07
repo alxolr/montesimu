@@ -116,3 +116,18 @@ The Monte Carlo Model Builder UI is a feature that enables users to define simul
 3. WHEN creating sub-components for variables, constants, or expression input, THE Model_Builder SHALL use standalone components
 4. THE Model_Builder SHALL not depend on NgModule declarations
 5. THE Model_Builder SHALL use Angular 20 features and APIs
+
+### Requirement 8: Distribution Preview Visualization
+
+**User Story:** As a user, I want to see a real-time preview of the probability distribution when adding or editing a variable, so that I can understand the shape and characteristics of the distribution I'm defining.
+
+#### Acceptance Criteria
+
+1. WHEN a user opens the variable form dialog, THE Model_Builder SHALL display a preview chart on the right side of the form
+2. WHEN a user selects Normal distribution, THE Model_Builder SHALL display a bell curve visualization of the probability density function
+3. WHEN a user selects Lognormal distribution, THE Model_Builder SHALL display a skewed distribution visualization of the probability density function
+4. WHEN a user selects Uniform distribution, THE Model_Builder SHALL display a flat distribution visualization between min and max values
+5. WHEN a user changes distribution parameters (mean, stdDev, min, max), THE Model_Builder SHALL update the preview chart in real-time
+6. WHEN displaying the preview chart, THE Model_Builder SHALL show the min and max values on the chart axes
+7. THE Model_Builder SHALL use a line chart component to visualize the probability density function
+8. WHEN the form dialog is displayed, THE Model_Builder SHALL arrange the form fields on the left and the preview chart on the right

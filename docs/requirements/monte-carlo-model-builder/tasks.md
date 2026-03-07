@@ -219,37 +219,109 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
 - [ ] 10. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [x] 11. Implement ModelBuilderComponent (main container)
-  - [x] 11.1 Create component structure and template
+- [ ] 10.5 Implement PDF calculation service
+  - [ ] 10.5.1 Create PDFCalculatorService
+    - Implement calculateNormalPDF method using the normal distribution formula
+    - Implement calculateLognormalPDF method using the lognormal distribution formula
+    - Implement calculateUniformPDF method using the uniform distribution formula
+    - Implement generatePDFPoints method to generate array of {x, y} points
+    - Implement x-range calculation for each distribution type
+    - _Requirements: 8.2, 8.3, 8.4_
+  
+  - [ ]* 10.5.2 Write property test for Normal distribution bell curve shape
+    - **Property 16: Normal Distribution Bell Curve Shape**
+    - **Validates: Requirements 8.2**
+  
+  - [ ]* 10.5.3 Write property test for Lognormal distribution skewed shape
+    - **Property 17: Lognormal Distribution Skewed Shape**
+    - **Validates: Requirements 8.3**
+  
+  - [ ]* 10.5.4 Write property test for Uniform distribution flat shape
+    - **Property 18: Uniform Distribution Flat Shape**
+    - **Validates: Requirements 8.4**
+  
+  - [ ]* 10.5.5 Write unit tests for PDF calculations
+    - Test edge cases: zero stdDev, negative values for lognormal
+    - Test boundary conditions for uniform distribution
+    - Test numerical accuracy of PDF formulas
+
+- [ ] 10.6 Implement DistributionPreviewComponent
+  - [ ] 10.6.1 Create component structure and template
+    - Create standalone component with PrimeNG Chart
+    - Set up chart configuration for line chart
+    - Configure x and y axes with appropriate labels
+    - Add TailwindCSS styling
+    - _Requirements: 8.1, 8.6, 8.7, 8.8_
+  
+  - [ ] 10.6.2 Implement reactive chart data generation
+    - Create computed signal that generates chart data from input parameters
+    - Inject PDFCalculatorService
+    - Call generatePDFPoints based on distribution type and parameters
+    - Format data for PrimeNG Chart component
+    - _Requirements: 8.2, 8.3, 8.4, 8.5_
+  
+  - [ ]* 10.6.3 Write property test for chart updates on parameter change
+    - **Property 19: Chart Updates on Parameter Change**
+    - **Validates: Requirements 8.5**
+  
+  - [ ]* 10.6.4 Write unit tests for chart component
+    - Test chart renders with valid parameters
+    - Test chart handles missing/undefined parameters gracefully
+    - Test chart configuration includes axis labels
+
+- [ ] 10.7 Update VariableFormComponent to include preview
+  - [ ] 10.7.1 Update component template
+    - Increase dialog width to accommodate side-by-side layout
+    - Add flex container with left (form) and right (preview) sections
+    - Import and use DistributionPreviewComponent
+    - Pass form parameters to preview component as inputs
+    - _Requirements: 8.1, 8.8_
+  
+  - [ ] 10.7.2 Update component styling
+    - Add CSS for side-by-side layout
+    - Ensure responsive behavior
+    - Match UI/UX guidelines
+    - _Requirements: 8.8_
+  
+  - [ ]* 10.7.3 Write unit tests for updated form layout
+    - Test preview component is rendered when dialog is visible
+    - Test preview component receives correct input parameters
+    - Test layout structure (left/right arrangement)
+
+- [ ] 11. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 12. Implement ModelBuilderComponent (main container)
+  - [x] 12.1 Create component structure and template
     - Create standalone component with PrimeNG Card
     - Import and use VariableListComponent, ConstantListComponent, ExpressionInputComponent
     - Arrange sections in correct order (variables, constants, expression)
     - Apply TailwindCSS layout styling
     - _Requirements: 4.1, 4.2, 4.3, 4.7, 4.8, 7.1, 7.2_
   
-  - [x] 11.2 Provide ModelService to child components
+  - [x] 12.2 Provide ModelService to child components
     - Inject ModelService at component level
     - Ensure all child components can access the service
     - _Requirements: 6.5, 6.6_
   
-  - [ ]* 11.3 Write unit tests for component integration
+  - [ ]* 12.3 Write unit tests for component integration
     - Test section ordering in DOM
     - Test that all three sections render
     - Test signal reactivity across components
 
-- [x] 12. Add routing and integrate into application
-  - [x] 12.1 Add route for ModelBuilderComponent
+- [x] 13. Add routing and integrate into application
+  - [x] 13.1 Add route for ModelBuilderComponent
     - Update app.routes.ts to include model-builder route
     - Add navigation link in main app component
     - _Requirements: 7.1_
   
-  - [x] 12.2 Test end-to-end workflow
+  - [x] 13.2 Test end-to-end workflow
     - Manually test creating variables, constants, and expressions
     - Verify all validation works correctly
     - Verify UI updates reactively
     - Test edit and delete operations
 
-- [ ] 13. Final checkpoint - Ensure all tests pass
+- [ ] 14. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

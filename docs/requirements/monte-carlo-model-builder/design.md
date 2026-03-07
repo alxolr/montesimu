@@ -28,6 +28,10 @@ model-builder/
 │   ├── variable-form.component.ts      # Add/Edit variable dialog
 │   ├── variable-form.component.html
 │   └── variable-form.component.css
+├── distribution-preview/
+│   ├── distribution-preview.component.ts   # Distribution PDF visualization
+│   ├── distribution-preview.component.html
+│   └── distribution-preview.component.css
 ├── constant-list/
 │   ├── constant-list.component.ts      # Constants section
 │   ├── constant-list.component.html
@@ -43,7 +47,8 @@ model-builder/
 └── services/
     ├── model.service.ts                # State management service
     ├── expression-validator.service.ts # Expression validation logic
-    └── identifier-validator.service.ts # Identifier validation logic
+    ├── identifier-validator.service.ts # Identifier validation logic
+    └── pdf-calculator.service.ts       # Probability density function calculations
 ```
 
 ### State Management Architecture
@@ -163,61 +168,78 @@ export class ModelService {
 - Display form fields for variable properties
 - Validate input data
 - Show/hide distribution parameter fields based on selected distribution type
+- Display real-time distribution preview chart
 - Submit valid data to ModelService
 
 **Template Structure**:
 ```html
-<p-dialog [(visible)]="visible" [header]="isEditMode ? 'Edit Variable' : 'Add Variable'">
-  <form (submit)="onSubmit($event)">
-    <div class="form-field">
-      <label for="name">Name</label>
-      <input pInputText id="name" [(ngModel)]="formData.name" required />
-      <small *ngIf="nameError" class="error">{{ nameError }}</small>
+<p-dialog [(visible)]="visible" [header]="isEditMode ? 'Edit Variable' : 'Add Variable'" [style]="{width: '800px'}">
+  <div class="flex gap-6">
+    <!-- Left side: Form fields -->
+    <div class="flex-1">
+      <form (submit)="onSubmit($event)">
+        <div class="form-field">
+          <label for="name">Name</label>
+          <input pInputText id="name" [(ngModel)]="formData.name" required />
+          <small *ngIf="nameError" class="error">{{ nameError }}</small>
+        </div>
+        
+        <div class="form-field">
+          <label for="distribution">Distribution</label>
+          <p-dropdown 
+            id="distribution" 
+            [options]="distributionOptions" 
+            [(ngModel)]="formData.distribution"
+            (onChange)="onDistributionChange()"
+          />
+        </div>
+        
+        <!-- Normal/Lognormal parameters -->
+        <div *ngIf="formData.distribution === 'Normal' || formData.distribution === 'Lognormal'">
+          <div class="form-field">
+            <label for="mean">Mean</label>
+            <input pInputText id="mean" type="number" [(ngModel)]="formData.mean" required />
+            <small *ngIf="meanError" class="error">{{ meanError }}</small>
+          </div>
+          <div class="form-field">
+            <label for="stdDev">Standard Deviation</label>
+            <input pInputText id="stdDev" type="number" [(ngModel)]="formData.stdDev" required />
+            <small *ngIf="stdDevError" class="error">{{ stdDevError }}</small>
+          </div>
+        </div>
+        
+        <!-- Uniform parameters -->
+        <div *ngIf="formData.distribution === 'Uniform'">
+          <div class="form-field">
+            <label for="min">Minimum</label>
+            <input pInputText id="min" type="number" [(ngModel)]="formData.min" required />
+            <small *ngIf="minError" class="error">{{ minError }}</small>
+          </div>
+          <div class="form-field">
+            <label for="max">Maximum</label>
+            <input pInputText id="max" type="number" [(ngModel)]="formData.max" required />
+            <small *ngIf="maxError" class="error">{{ maxError }}</small>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <p-button type="submit" label="Save" [disabled]="!isFormValid()" />
+          <p-button type="button" label="Cancel" (onClick)="onCancel()" />
+        </div>
+      </form>
     </div>
     
-    <div class="form-field">
-      <label for="distribution">Distribution</label>
-      <p-dropdown 
-        id="distribution" 
-        [options]="distributionOptions" 
-        [(ngModel)]="formData.distribution"
-        (onChange)="onDistributionChange()"
+    <!-- Right side: Distribution preview -->
+    <div class="flex-1">
+      <app-distribution-preview 
+        [distribution]="formData.distribution"
+        [mean]="formData.mean"
+        [stdDev]="formData.stdDev"
+        [min]="formData.min"
+        [max]="formData.max"
       />
     </div>
-    
-    <!-- Normal/Lognormal parameters -->
-    <div *ngIf="formData.distribution === 'Normal' || formData.distribution === 'Lognormal'">
-      <div class="form-field">
-        <label for="mean">Mean</label>
-        <input pInputText id="mean" type="number" [(ngModel)]="formData.mean" required />
-        <small *ngIf="meanError" class="error">{{ meanError }}</small>
-      </div>
-      <div class="form-field">
-        <label for="stdDev">Standard Deviation</label>
-        <input pInputText id="stdDev" type="number" [(ngModel)]="formData.stdDev" required />
-        <small *ngIf="stdDevError" class="error">{{ stdDevError }}</small>
-      </div>
-    </div>
-    
-    <!-- Uniform parameters -->
-    <div *ngIf="formData.distribution === 'Uniform'">
-      <div class="form-field">
-        <label for="min">Minimum</label>
-        <input pInputText id="min" type="number" [(ngModel)]="formData.min" required />
-        <small *ngIf="minError" class="error">{{ minError }}</small>
-      </div>
-      <div class="form-field">
-        <label for="max">Maximum</label>
-        <input pInputText id="max" type="number" [(ngModel)]="formData.max" required />
-        <small *ngIf="maxError" class="error">{{ maxError }}</small>
-      </div>
-    </div>
-    
-    <div class="form-actions">
-      <p-button type="submit" label="Save" [disabled]="!isFormValid()" />
-      <p-button type="button" label="Cancel" (onClick)="onCancel()" />
-    </div>
-  </form>
+  </div>
 </p-dialog>
 ```
 
@@ -391,6 +413,112 @@ export class ModelService {
 - `onExpressionChange(value: string)`: Updates expression in ModelService and triggers validation
 - `validationResult()`: Computed signal returning validation status and errors
 - `availableIdentifiers()`: Computed signal returning list of all defined identifiers
+
+---
+
+### DistributionPreviewComponent
+
+**Purpose**: Display a real-time visualization of the probability density function for a distribution.
+
+**Responsibilities**:
+- Calculate PDF values for the selected distribution type
+- Render a line chart showing the probability density function
+- Update the chart in real-time as parameters change
+- Display appropriate x-axis range based on distribution parameters
+
+**Template Structure**:
+```html
+<div class="distribution-preview">
+  <h4>Distribution Preview</h4>
+  <p-chart 
+    type="line" 
+    [data]="chartData()" 
+    [options]="chartOptions"
+    [style]="{height: '300px'}"
+  />
+</div>
+```
+
+**Inputs**:
+- `distribution: DistributionType`: The selected distribution type
+- `mean?: number`: Mean parameter (for Normal/Lognormal)
+- `stdDev?: number`: Standard deviation parameter (for Normal/Lognormal)
+- `min?: number`: Minimum parameter (for Uniform)
+- `max?: number`: Maximum parameter (for Uniform)
+
+**Outputs**: None
+
+**Key Methods**:
+- `chartData()`: Computed signal that generates chart data based on current parameters
+- `generatePDFData()`: Generates x and y coordinates for the PDF curve
+- `calculateXRange()`: Determines appropriate x-axis range based on distribution and parameters
+
+**Chart Configuration**:
+- Use PrimeNG Chart component (based on Chart.js)
+- Line chart with smooth curves
+- X-axis: Value range
+- Y-axis: Probability density
+- Display min/max values on x-axis for Uniform distribution
+- Display mean ± 3*stdDev range for Normal/Lognormal distributions
+
+---
+
+### PDFCalculatorService
+
+**Purpose**: Calculate probability density function values for different distribution types.
+
+**Responsibilities**:
+- Calculate PDF values for Normal distribution
+- Calculate PDF values for Lognormal distribution
+- Calculate PDF values for Uniform distribution
+- Provide utility functions for statistical calculations
+
+**Interface**:
+```typescript
+export interface PDFPoint {
+  x: number;
+  y: number;
+}
+
+export class PDFCalculatorService {
+  calculateNormalPDF(x: number, mean: number, stdDev: number): number;
+  calculateLognormalPDF(x: number, mean: number, stdDev: number): number;
+  calculateUniformPDF(x: number, min: number, max: number): number;
+  
+  generatePDFPoints(
+    distribution: DistributionType,
+    params: { mean?: number; stdDev?: number; min?: number; max?: number },
+    numPoints?: number
+  ): PDFPoint[];
+}
+```
+
+**PDF Calculation Formulas**:
+
+1. **Normal Distribution**:
+   ```
+   PDF(x) = (1 / (σ * √(2π))) * e^(-((x - μ)²) / (2σ²))
+   where μ = mean, σ = stdDev
+   ```
+
+2. **Lognormal Distribution**:
+   ```
+   PDF(x) = (1 / (x * σ * √(2π))) * e^(-((ln(x) - μ)²) / (2σ²))
+   where μ = mean, σ = stdDev, x > 0
+   ```
+
+3. **Uniform Distribution**:
+   ```
+   PDF(x) = 1 / (max - min)  if min ≤ x ≤ max
+   PDF(x) = 0                otherwise
+   ```
+
+**X-Range Calculation**:
+- Normal: [mean - 4*stdDev, mean + 4*stdDev]
+- Lognormal: [0.01, mean + 4*stdDev] (avoid x=0)
+- Uniform: [min - 0.1*(max-min), max + 0.1*(max-min)] (add padding)
+
+**Number of Points**: Default 200 points for smooth curves
 
 ---
 
@@ -669,6 +797,30 @@ A property is a characteristic or behavior that should hold true across all vali
 *For any* distribution parameter that has domain constraints (e.g., standard deviation must be positive, uniform max must be greater than min), the system should validate these constraints and reject invalid values with descriptive error messages.
 
 **Validates: Requirements 5.7**
+
+### Property 16: Normal Distribution Bell Curve Shape
+
+*For any* Normal distribution with valid mean and standard deviation parameters, the generated PDF curve should have a single maximum value at the mean, should be symmetric around the mean, and should decrease monotonically on both sides of the mean.
+
+**Validates: Requirements 8.2**
+
+### Property 17: Lognormal Distribution Skewed Shape
+
+*For any* Lognormal distribution with valid mean and standard deviation parameters, the generated PDF curve should only have positive x values, should have a single peak, and should have a longer right tail than left tail (right-skewed).
+
+**Validates: Requirements 8.3**
+
+### Property 18: Uniform Distribution Flat Shape
+
+*For any* Uniform distribution with valid min and max parameters, the PDF should be constant (equal to 1/(max-min)) for all x values between min and max, and should be zero for all x values outside that range.
+
+**Validates: Requirements 8.4**
+
+### Property 19: Chart Updates on Parameter Change
+
+*For any* distribution parameter change (mean, stdDev, min, or max), the preview chart data should update to reflect the new parameter values, resulting in a different set of PDF points.
+
+**Validates: Requirements 8.5**
 
 ## Error Handling
 
