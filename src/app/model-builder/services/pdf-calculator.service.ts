@@ -109,9 +109,16 @@ export class PDFCalculatorService {
         break;
       case 'Lognormal':
         if (params.mean !== undefined && params.stdDev !== undefined && params.stdDev > 0) {
+          // For lognormal, mean and stdDev are parameters of the underlying normal distribution
+          // The actual median of the lognormal is exp(mean)
+          // We want to show a range that captures most of the distribution
+          const median = Math.exp(params.mean);
+          const lowerBound = Math.exp(params.mean - 3 * params.stdDev);
+          const upperBound = Math.exp(params.mean + 3 * params.stdDev);
+          
           return {
-            xMin: 0.01,
-            xMax: params.mean + 4 * params.stdDev
+            xMin: Math.max(0.01, lowerBound * 0.5), // Add some padding, but stay positive
+            xMax: upperBound * 1.2 // Add some padding on the right
           };
         }
         break;
