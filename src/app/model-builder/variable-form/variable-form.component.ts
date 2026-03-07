@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { Variable, DistributionType, Distribution } from '../models';
 import { IdentifierValidatorService } from '../services/identifier-validator.service';
 import { ModelService } from '../services/model.service';
+import { DistributionPreviewComponent } from '../distribution-preview/distribution-preview.component';
 
 interface DistributionOption {
   label: string;
@@ -23,7 +24,8 @@ interface DistributionOption {
     DialogModule,
     InputTextModule,
     SelectModule,
-    ButtonModule
+    ButtonModule,
+    DistributionPreviewComponent
   ],
   templateUrl: './variable-form.component.html',
   styleUrl: './variable-form.component.css'

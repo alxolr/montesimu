@@ -245,7 +245,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test boundary conditions for uniform distribution
     - Test numerical accuracy of PDF formulas
 
-- [-] 10.6 Implement DistributionPreviewComponent
+- [x] 10.6 Implement DistributionPreviewComponent
   - [x] 10.6.1 Create component structure and template
     - Create standalone component with PrimeNG Chart
     - Set up chart configuration for line chart
@@ -269,15 +269,15 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test chart handles missing/undefined parameters gracefully
     - Test chart configuration includes axis labels
 
-- [ ] 10.7 Update VariableFormComponent to include preview
-  - [ ] 10.7.1 Update component template
+- [x] 10.7 Update VariableFormComponent to include preview
+  - [x] 10.7.1 Update component template
     - Increase dialog width to accommodate side-by-side layout
     - Add flex container with left (form) and right (preview) sections
     - Import and use DistributionPreviewComponent
     - Pass form parameters to preview component as inputs
     - _Requirements: 8.1, 8.8_
   
-  - [ ] 10.7.2 Update component styling
+  - [x] 10.7.2 Update component styling
     - Add CSS for side-by-side layout
     - Ensure responsive behavior
     - Match UI/UX guidelines

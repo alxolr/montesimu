@@ -2,122 +2,138 @@
   [(visible)]="visible" 
   [header]="isEditMode ? 'Edit Variable' : 'Add Variable'"
   [modal]="true"
-  [style]="{width: '450px'}"
+  [style]="{width: '900px'}"
   (onHide)="onCancel()">
   
-  <form (submit)="onSubmit($event)" class="flex flex-col gap-4">
-    <!-- Name Field -->
-    <div class="form-field">
-      <label for="name" class="block mb-2 font-medium">Name</label>
-      <input 
-        pInputText 
-        id="name" 
-        [(ngModel)]="formData.name" 
-        name="name"
-        class="w-full"
-        [class.ng-invalid]="nameError"
-        required 
+  <div class="flex gap-6">
+    <!-- Left side: Form -->
+    <div class="flex-1">
+      <form (submit)="onSubmit($event)" class="flex flex-col gap-4">
+        <!-- Name Field -->
+        <div class="form-field">
+          <label for="name" class="block mb-2 font-medium">Name</label>
+          <input 
+            pInputText 
+            id="name" 
+            [(ngModel)]="formData.name" 
+            name="name"
+            class="w-full"
+            [class.ng-invalid]="nameError"
+            required 
+          />
+          <small *ngIf="nameError" class="text-red-600 block mt-1">{{ nameError }}</small>
+        </div>
+
+        <!-- Distribution Type Field -->
+        <div class="form-field">
+          <label for="distribution" class="block mb-2 font-medium">Distribution</label>
+          <p-select 
+            id="distribution" 
+            [options]="distributionOptions" 
+            [(ngModel)]="formData.distribution"
+            name="distribution"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="onDistributionChange()"
+            [style]="{width: '100%'}"
+          ></p-select>
+        </div>
+
+        <!-- Normal/Lognormal Parameters -->
+        <div *ngIf="formData.distribution === 'Normal' || formData.distribution === 'Lognormal'" class="flex flex-col gap-4">
+          <div class="form-field">
+            <label for="mean" class="block mb-2 font-medium">Mean</label>
+            <input 
+              pInputText 
+              id="mean" 
+              type="number" 
+              [(ngModel)]="formData.mean" 
+              name="mean"
+              class="w-full"
+              [class.ng-invalid]="meanError"
+              step="any"
+              required 
+            />
+            <small *ngIf="meanError" class="text-red-600 block mt-1">{{ meanError }}</small>
+          </div>
+
+          <div class="form-field">
+            <label for="stdDev" class="block mb-2 font-medium">Standard Deviation</label>
+            <input 
+              pInputText 
+              id="stdDev" 
+              type="number" 
+              [(ngModel)]="formData.stdDev" 
+              name="stdDev"
+              class="w-full"
+              [class.ng-invalid]="stdDevError"
+              step="any"
+              required 
+            />
+            <small *ngIf="stdDevError" class="text-red-600 block mt-1">{{ stdDevError }}</small>
+          </div>
+        </div>
+
+        <!-- Uniform Parameters -->
+        <div *ngIf="formData.distribution === 'Uniform'" class="flex flex-col gap-4">
+          <div class="form-field">
+            <label for="min" class="block mb-2 font-medium">Minimum</label>
+            <input 
+              pInputText 
+              id="min" 
+              type="number" 
+              [(ngModel)]="formData.min" 
+              name="min"
+              class="w-full"
+              [class.ng-invalid]="minError"
+              step="any"
+              required 
+            />
+            <small *ngIf="minError" class="text-red-600 block mt-1">{{ minError }}</small>
+          </div>
+
+          <div class="form-field">
+            <label for="max" class="block mb-2 font-medium">Maximum</label>
+            <input 
+              pInputText 
+              id="max" 
+              type="number" 
+              [(ngModel)]="formData.max" 
+              name="max"
+              class="w-full"
+              [class.ng-invalid]="maxError"
+              step="any"
+              required 
+            />
+            <small *ngIf="maxError" class="text-red-600 block mt-1">{{ maxError }}</small>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex justify-end gap-2 mt-4">
+          <p-button 
+            type="button" 
+            label="Cancel" 
+            severity="secondary"
+            (onClick)="onCancel()"
+          ></p-button>
+          <p-button 
+            type="submit" 
+            label="Save"
+          ></p-button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right side: Distribution Preview -->
+    <div class="flex-1">
+      <app-distribution-preview
+        [distribution]="formData.distribution"
+        [mean]="formData.mean"
+        [stdDev]="formData.stdDev"
+        [min]="formData.min"
+        [max]="formData.max"
       />
-      <small *ngIf="nameError" class="text-red-600 block mt-1">{{ nameError }}</small>
     </div>
-
-    <!-- Distribution Type Field -->
-    <div class="form-field">
-      <label for="distribution" class="block mb-2 font-medium">Distribution</label>
-      <p-select 
-        id="distribution" 
-        [options]="distributionOptions" 
-        [(ngModel)]="formData.distribution"
-        name="distribution"
-        optionLabel="label"
-        optionValue="value"
-        (onChange)="onDistributionChange()"
-        [style]="{width: '100%'}"
-      ></p-select>
-    </div>
-
-    <!-- Normal/Lognormal Parameters -->
-    <div *ngIf="formData.distribution === 'Normal' || formData.distribution === 'Lognormal'" class="flex flex-col gap-4">
-      <div class="form-field">
-        <label for="mean" class="block mb-2 font-medium">Mean</label>
-        <input 
-          pInputText 
-          id="mean" 
-          type="number" 
-          [(ngModel)]="formData.mean" 
-          name="mean"
-          class="w-full"
-          [class.ng-invalid]="meanError"
-          step="any"
-          required 
-        />
-        <small *ngIf="meanError" class="text-red-600 block mt-1">{{ meanError }}</small>
-      </div>
-
-      <div class="form-field">
-        <label for="stdDev" class="block mb-2 font-medium">Standard Deviation</label>
-        <input 
-          pInputText 
-          id="stdDev" 
-          type="number" 
-          [(ngModel)]="formData.stdDev" 
-          name="stdDev"
-          class="w-full"
-          [class.ng-invalid]="stdDevError"
-          step="any"
-          required 
-        />
-        <small *ngIf="stdDevError" class="text-red-600 block mt-1">{{ stdDevError }}</small>
-      </div>
-    </div>
-
-    <!-- Uniform Parameters -->
-    <div *ngIf="formData.distribution === 'Uniform'" class="flex flex-col gap-4">
-      <div class="form-field">
-        <label for="min" class="block mb-2 font-medium">Minimum</label>
-        <input 
-          pInputText 
-          id="min" 
-          type="number" 
-          [(ngModel)]="formData.min" 
-          name="min"
-          class="w-full"
-          [class.ng-invalid]="minError"
-          step="any"
-          required 
-        />
-        <small *ngIf="minError" class="text-red-600 block mt-1">{{ minError }}</small>
-      </div>
-
-      <div class="form-field">
-        <label for="max" class="block mb-2 font-medium">Maximum</label>
-        <input 
-          pInputText 
-          id="max" 
-          type="number" 
-          [(ngModel)]="formData.max" 
-          name="max"
-          class="w-full"
-          [class.ng-invalid]="maxError"
-          step="any"
-          required 
-        />
-        <small *ngIf="maxError" class="text-red-600 block mt-1">{{ maxError }}</small>
-      </div>
-    </div>
-
-    <!-- Form Actions -->
-    <div class="flex justify-end gap-2 mt-4">
-      <p-button 
-        type="button" 
-        label="Cancel" 
-        severity="secondary"
-        (onClick)="onCancel()"
-      ></p-button>
-      <p-button 
-        type="submit" 
-        label="Save"
-      ></p-button>
-    </div>
-  </form>
+  </div>
 </p-dialog>
