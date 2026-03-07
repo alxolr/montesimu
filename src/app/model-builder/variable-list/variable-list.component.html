@@ -26,20 +26,22 @@
           {{ formatParams(variable) }}
         </span>
       </div>
-      <div class="variable-actions flex gap-2">
+      <div class="variable-actions flex gap-2 ml-4">
         <p-button 
           icon="pi pi-pencil" 
           (onClick)="openEditDialog(variable)"
-          [text]="true"
-          severity="secondary"
+          severity="info"
           size="small"
+          [rounded]="true"
+          label="Edit"
         ></p-button>
         <p-button 
           icon="pi pi-trash" 
           (onClick)="deleteVariable(variable)"
-          [text]="true"
           severity="danger"
           size="small"
+          [rounded]="true"
+          label="Delete"
         ></p-button>
       </div>
     </div>
