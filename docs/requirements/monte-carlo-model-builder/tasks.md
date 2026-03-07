@@ -6,7 +6,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
 
 ## Tasks
 
-- [ ] 1. Set up data models and type definitions
+- [x] 1. Set up data models and type definitions
   - Create TypeScript interfaces for Variable, Constant, Distribution types
   - Define DistributionType union type ('Normal' | 'Lognormal' | 'Uniform')
   - Create ModelState interface
