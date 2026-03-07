@@ -187,21 +187,37 @@ For inline actions (edit, delete, etc.) in lists or tables:
   - Save: `pi-check`
   - Cancel: `pi-times`
 - Use appropriate severity colors:
-  - Edit: `secondary` or `info`
-  - Delete: `danger`
+  - Edit: `info` (light blue)
+  - Delete: `danger` (light red)
   - Primary actions: default or `primary`
-- Use `[text]="true"` or `[rounded]="true"` for subtle appearance
+- Use `[outlined]="true"` for subtle appearance with colored border and icon
+- Use `[rounded]="true"` for modern circular buttons
 - Always include `pTooltip` directive for accessibility
+- Buttons are always visible (do NOT use `[text]="true"` which makes them hover-only)
 
 Example:
 ```html
+<!-- Edit button (light blue outline) -->
 <p-button 
   icon="pi pi-pencil" 
   (onClick)="edit()"
-  severity="secondary"
-  [text]="true"
+  severity="info"
+  size="small"
+  [outlined]="true"
   [rounded]="true"
   pTooltip="Edit"
+  tooltipPosition="top"
+></p-button>
+
+<!-- Delete button (light red outline) -->
+<p-button 
+  icon="pi pi-times" 
+  (onClick)="delete()"
+  severity="danger"
+  size="small"
+  [outlined]="true"
+  [rounded]="true"
+  pTooltip="Delete"
   tooltipPosition="top"
 ></p-button>
 ```
