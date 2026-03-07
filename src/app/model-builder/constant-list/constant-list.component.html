@@ -27,18 +27,22 @@
         <p-button 
           icon="pi pi-pencil" 
           (onClick)="openEditDialog(constant)"
-          severity="info"
+          severity="secondary"
           size="small"
+          [text]="true"
           [rounded]="true"
-          label="Edit"
+          pTooltip="Edit constant"
+          tooltipPosition="top"
         ></p-button>
         <p-button 
-          icon="pi pi-trash" 
+          icon="pi pi-times" 
           (onClick)="deleteConstant(constant)"
-          severity="danger"
+          severity="secondary"
           size="small"
+          [text]="true"
           [rounded]="true"
-          label="Delete"
+          pTooltip="Delete constant"
+          tooltipPosition="top"
         ></p-button>
       </div>
     </div>

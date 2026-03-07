@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { ModelService } from '../services/model.service';
 import { Constant } from '../models';
 import { ConstantFormComponent } from '../constant-form/constant-form.component';
@@ -9,7 +10,7 @@ import { ConstantFormComponent } from '../constant-form/constant-form.component'
 @Component({
   selector: 'app-constant-list',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, ConstantFormComponent],
+  imports: [CommonModule, CardModule, ButtonModule, TooltipModule, ConstantFormComponent],
   templateUrl: './constant-list.component.html',
   styleUrl: './constant-list.component.css'
 })

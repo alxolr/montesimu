@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { ModelService } from '../services/model.service';
 import { Variable } from '../models';
 import { VariableFormComponent } from '../variable-form/variable-form.component';
@@ -9,7 +10,7 @@ import { VariableFormComponent } from '../variable-form/variable-form.component'
 @Component({
   selector: 'app-variable-list',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, VariableFormComponent],
+  imports: [CommonModule, CardModule, ButtonModule, TooltipModule, VariableFormComponent],
   templateUrl: './variable-list.component.html',
   styleUrl: './variable-list.component.css'
 })

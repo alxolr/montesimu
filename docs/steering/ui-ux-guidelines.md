@@ -174,6 +174,53 @@ options = {
 - Clear axis labels and legends
 - Responsive sizing
 
+## Button Guidelines
+
+### Action Buttons
+For inline actions (edit, delete, etc.) in lists or tables:
+- Use icon-only buttons without text labels
+- Add tooltips for accessibility and clarity
+- Use PrimeIcons for consistency:
+  - Edit: `pi-pencil`
+  - Delete: `pi-trash` or `pi-times`
+  - Add: `pi-plus`
+  - Save: `pi-check`
+  - Cancel: `pi-times`
+- Use appropriate severity colors:
+  - Edit: `secondary` or `info`
+  - Delete: `danger`
+  - Primary actions: default or `primary`
+- Use `[text]="true"` or `[rounded]="true"` for subtle appearance
+- Always include `pTooltip` directive for accessibility
+
+Example:
+```html
+<p-button 
+  icon="pi pi-pencil" 
+  (onClick)="edit()"
+  severity="secondary"
+  [text]="true"
+  [rounded]="true"
+  pTooltip="Edit"
+  tooltipPosition="top"
+></p-button>
+```
+
+### Primary Action Buttons
+For main actions (submit forms, create new items):
+- Include both icon and text label
+- Use larger size if needed
+- Place prominently in the UI
+
+Example:
+```html
+<p-button 
+  label="Add Variable" 
+  icon="pi pi-plus" 
+  (onClick)="add()"
+></p-button>
+```
+
 ## Accessibility
 
 ### ARIA Labels

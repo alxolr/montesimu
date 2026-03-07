@@ -30,18 +30,22 @@
         <p-button 
           icon="pi pi-pencil" 
           (onClick)="openEditDialog(variable)"
-          severity="info"
+          severity="secondary"
           size="small"
+          [text]="true"
           [rounded]="true"
-          label="Edit"
+          pTooltip="Edit variable"
+          tooltipPosition="top"
         ></p-button>
         <p-button 
-          icon="pi pi-trash" 
+          icon="pi pi-times" 
           (onClick)="deleteVariable(variable)"
-          severity="danger"
+          severity="secondary"
           size="small"
+          [text]="true"
           [rounded]="true"
-          label="Delete"
+          pTooltip="Delete variable"
+          tooltipPosition="top"
         ></p-button>
       </div>
     </div>
