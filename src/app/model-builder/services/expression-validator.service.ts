@@ -36,6 +36,14 @@ export class ExpressionValidatorService {
   private checkSyntax(expression: string): string[] {
     const errors: string[] = [];
 
+    // Check for invalid characters
+    const validCharRegex = /^[a-zA-Z0-9+\-*/^()\s]+$/;
+    if (!validCharRegex.test(expression)) {
+      const invalidChars = expression.split('').filter(char => !validCharRegex.test(char));
+      errors.push(`Invalid characters: ${[...new Set(invalidChars)].join(', ')}`);
+      return errors; // Return early if invalid characters found
+    }
+
     // Check balanced parentheses
     let balance = 0;
     for (let i = 0; i < expression.length; i++) {
@@ -97,7 +105,10 @@ export class ExpressionValidatorService {
     const matches = expression.match(this.IDENTIFIER_REGEX);
     if (!matches) return [];
     
+    // Filter out numeric literals - only keep identifiers that start with a letter
+    const identifiers = matches.filter(match => /^[a-zA-Z]/.test(match));
+    
     // Remove duplicates and return
-    return Array.from(new Set(matches));
+    return Array.from(new Set(identifiers));
   }
 }
