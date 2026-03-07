@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -28,7 +28,7 @@ interface DistributionOption {
   templateUrl: './variable-form.component.html',
   styleUrl: './variable-form.component.css'
 })
-export class VariableFormComponent implements OnInit {
+export class VariableFormComponent implements OnInit, OnChanges {
   @Input() visible: boolean = false;
   @Input() variable?: Variable;
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -67,10 +67,22 @@ export class VariableFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (this.variable) {
+    this.initializeForm();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['variable'] || changes['visible']) {
+      this.initializeForm();
+    }
+  }
+
+  initializeForm(): void {
+    if (this.variable && this.visible) {
       this.isEditMode = true;
       this.originalName = this.variable.name;
       this.loadVariable(this.variable);
+    } else if (this.visible && !this.variable) {
+      this.resetForm();
     }
   }
 

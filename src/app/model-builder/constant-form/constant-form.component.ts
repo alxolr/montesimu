@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -21,7 +21,7 @@ import { ModelService } from '../services/model.service';
   templateUrl: './constant-form.component.html',
   styleUrl: './constant-form.component.css'
 })
-export class ConstantFormComponent implements OnInit {
+export class ConstantFormComponent implements OnInit, OnChanges {
   @Input() visible: boolean = false;
   @Input() constant?: Constant;
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -46,10 +46,22 @@ export class ConstantFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (this.constant) {
+    this.initializeForm();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['constant'] || changes['visible']) {
+      this.initializeForm();
+    }
+  }
+
+  initializeForm(): void {
+    if (this.constant && this.visible) {
       this.isEditMode = true;
       this.originalName = this.constant.name;
       this.loadConstant(this.constant);
+    } else if (this.visible && !this.constant) {
+      this.resetForm();
     }
   }
 
