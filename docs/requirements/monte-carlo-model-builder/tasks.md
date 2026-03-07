@@ -43,26 +43,26 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - **Property 11: Operator Support**
     - **Validates: Requirements 3.3**
 
-- [ ] 3. Implement ModelService with Angular signals
-  - [ ] 3.1 Create ModelService with signal-based state
+- [x] 3. Implement ModelService with Angular signals
+  - [x] 3.1 Create ModelService with signal-based state
     - Create private writable signals for variables, constants, expression
     - Expose readonly signals for components
     - Create computed signal for allIdentifiers
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
   
-  - [ ] 3.2 Implement variable CRUD operations
+  - [x] 3.2 Implement variable CRUD operations
     - Implement addVariable, updateVariable, deleteVariable, getVariable methods
     - Update signals when operations occur
     - Validate uniqueness before adding/updating
     - _Requirements: 1.6, 1.7, 1.8_
   
-  - [ ] 3.3 Implement constant CRUD operations
+  - [x] 3.3 Implement constant CRUD operations
     - Implement addConstant, updateConstant, deleteConstant, getConstant methods
     - Update signals when operations occur
     - Validate uniqueness before adding/updating
     - _Requirements: 2.3, 2.5, 2.6_
   
-  - [ ] 3.4 Implement expression management
+  - [x] 3.4 Implement expression management
     - Implement setExpression method
     - Integrate ExpressionValidatorService for validation
     - Create computed signal for validation results
