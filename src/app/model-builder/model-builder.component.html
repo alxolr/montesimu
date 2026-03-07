@@ -8,23 +8,23 @@
     </ng-template>
 
     <div class="space-y-6">
-      <!-- Variables Section -->
-      <div class="section">
-        <app-variable-list></app-variable-list>
+      <!-- Variables and Constants in Two Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Variables Section -->
+        <div class="section">
+          <app-variable-list></app-variable-list>
+        </div>
+
+        <!-- Constants Section -->
+        <div class="section">
+          <app-constant-list></app-constant-list>
+        </div>
       </div>
 
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
 
-      <!-- Constants Section -->
-      <div class="section">
-        <app-constant-list></app-constant-list>
-      </div>
-
-      <!-- Divider -->
-      <div class="border-t border-gray-200"></div>
-
-      <!-- Expression Section -->
+      <!-- Expression Section (Full Width) -->
       <div class="section">
         <app-expression-input></app-expression-input>
       </div>
