@@ -219,8 +219,8 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
 - [ ] 10. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10.5 Implement PDF calculation service
-  - [ ] 10.5.1 Create PDFCalculatorService
+- [x] 10.5 Implement PDF calculation service
+  - [x] 10.5.1 Create PDFCalculatorService
     - Implement calculateNormalPDF method using the normal distribution formula
     - Implement calculateLognormalPDF method using the lognormal distribution formula
     - Implement calculateUniformPDF method using the uniform distribution formula
@@ -245,15 +245,15 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test boundary conditions for uniform distribution
     - Test numerical accuracy of PDF formulas
 
-- [ ] 10.6 Implement DistributionPreviewComponent
-  - [ ] 10.6.1 Create component structure and template
+- [-] 10.6 Implement DistributionPreviewComponent
+  - [x] 10.6.1 Create component structure and template
     - Create standalone component with PrimeNG Chart
     - Set up chart configuration for line chart
     - Configure x and y axes with appropriate labels
     - Add TailwindCSS styling
     - _Requirements: 8.1, 8.6, 8.7, 8.8_
   
-  - [ ] 10.6.2 Implement reactive chart data generation
+  - [x] 10.6.2 Implement reactive chart data generation
     - Create computed signal that generates chart data from input parameters
     - Inject PDFCalculatorService
     - Call generatePDFPoints based on distribution type and parameters
