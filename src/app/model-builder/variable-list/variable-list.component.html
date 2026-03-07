@@ -1,0 +1,54 @@
+<div class="variable-section mb-4">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-xl font-semibold">Variables</h3>
+    <p-button 
+      label="Add Variable" 
+      icon="pi pi-plus" 
+      (onClick)="openAddDialog()"
+      size="small"
+    ></p-button>
+  </div>
+  
+  <div *ngIf="modelService.variables().length === 0" class="empty-state p-4 text-center bg-gray-50 rounded border border-gray-200">
+    <p class="text-gray-600">No variables defined. Click "Add Variable" to create one.</p>
+  </div>
+  
+  <div *ngIf="modelService.variables().length > 0" class="space-y-2">
+    <div *ngFor="let variable of modelService.variables()" class="variable-item flex items-center justify-between p-3 bg-white border border-gray-200 rounded hover:bg-gray-50">
+      <div class="variable-info flex-1">
+        <div class="flex items-center gap-3">
+          <span class="variable-name font-semibold text-lg">{{ variable.name }}</span>
+          <span class="variable-distribution px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
+            {{ variable.distribution.type }}
+          </span>
+        </div>
+        <span class="variable-params text-sm text-gray-600 mt-1 block">
+          {{ formatParams(variable) }}
+        </span>
+      </div>
+      <div class="variable-actions flex gap-2">
+        <p-button 
+          icon="pi pi-pencil" 
+          (onClick)="openEditDialog(variable)"
+          [text]="true"
+          severity="secondary"
+          size="small"
+        ></p-button>
+        <p-button 
+          icon="pi pi-trash" 
+          (onClick)="deleteVariable(variable)"
+          [text]="true"
+          severity="danger"
+          size="small"
+        ></p-button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Variable Form Dialog -->
+<app-variable-form
+  [(visible)]="showDialog"
+  [variable]="editingVariable"
+  (save)="onVariableSave($event)"
+></app-variable-form>

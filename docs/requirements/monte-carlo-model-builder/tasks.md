@@ -126,8 +126,8 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test error message clearing on correction
     - Test distribution type change resetting parameters
 
-- [ ] 6. Implement VariableListComponent
-  - [ ] 6.1 Create component structure and template
+- [x] 6. Implement VariableListComponent
+  - [x] 6.1 Create component structure and template
     - Create standalone component with PrimeNG Card, Button
     - Display list of variables from ModelService signal
     - Add "Add Variable" button
@@ -135,7 +135,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Show empty state when no variables exist
     - _Requirements: 1.9, 4.1, 4.4_
   
-  - [ ] 6.2 Implement variable management actions
+  - [x] 6.2 Implement variable management actions
     - Open VariableFormComponent dialog for add/edit
     - Call ModelService.deleteVariable for delete action
     - Format distribution parameters for display
@@ -145,21 +145,21 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - **Property 7: Complete List Display**
     - **Validates: Requirements 1.9, 2.7**
 
-- [ ] 7. Implement ConstantFormComponent
-  - [ ] 7.1 Create component structure and template
+- [x] 7. Implement ConstantFormComponent
+  - [x] 7.1 Create component structure and template
     - Create standalone component with PrimeNG Dialog, InputText
     - Set up form with name and value fields
     - Add TailwindCSS styling for layout
     - _Requirements: 2.1, 4.7, 4.8_
   
-  - [ ] 7.2 Implement form validation logic
+  - [x] 7.2 Implement form validation logic
     - Inject IdentifierValidatorService and ModelService
     - Validate name format and uniqueness
     - Validate numeric value
     - Display inline error messages
     - _Requirements: 2.2, 2.3, 2.4, 5.1, 5.3, 5.4, 5.5_
   
-  - [ ] 7.3 Implement form submission
+  - [x] 7.3 Implement form submission
     - Prevent submission if form is invalid
     - Call ModelService to add or update constant
     - Close dialog on successful save
@@ -173,8 +173,8 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test negative, zero, and positive values
     - Test very large and very small numbers
 
-- [ ] 8. Implement ConstantListComponent
-  - [ ] 8.1 Create component structure and template
+- [x] 8. Implement ConstantListComponent
+  - [x] 8.1 Create component structure and template
     - Create standalone component with PrimeNG Card, Button
     - Display list of constants from ModelService signal
     - Add "Add Constant" button
@@ -182,7 +182,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Show empty state when no constants exist
     - _Requirements: 2.7, 4.1, 4.5_
   
-  - [ ] 8.2 Implement constant management actions
+  - [x] 8.2 Implement constant management actions
     - Open ConstantFormComponent dialog for add/edit
     - Call ModelService.deleteConstant for delete action
     - _Requirements: 2.5, 2.6_
