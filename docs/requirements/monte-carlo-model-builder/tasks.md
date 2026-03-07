@@ -13,8 +13,8 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
   - Place in `src/app/model-builder/models/` directory
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1_
 
-- [ ] 2. Implement validation services
-  - [ ] 2.1 Create IdentifierValidatorService
+- [x] 2. Implement validation services
+  - [x] 2.1 Create IdentifierValidatorService
     - Implement `validate(name: string)` method
     - Check for alphanumeric-only characters using regex
     - Return IdentifierValidationResult with isValid and error message
@@ -24,7 +24,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - **Property 3: Identifier Format Validation**
     - **Validates: Requirements 1.5, 2.2, 5.4**
   
-  - [ ] 2.3 Create ExpressionValidatorService
+  - [x] 2.3 Create ExpressionValidatorService
     - Implement `validate(expression: string, validIdentifiers: string[])` method
     - Implement syntax validation (balanced parentheses, operator placement)
     - Implement identifier extraction and validation
