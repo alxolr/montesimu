@@ -1,0 +1,55 @@
+<div class="expression-section mb-4">
+  <h3 class="text-xl font-semibold mb-4">Model Expression</h3>
+  
+  <div class="form-field mb-4">
+    <label for="expression" class="block mb-2 font-medium">Expression</label>
+    <input 
+      pInputText 
+      id="expression" 
+      [(ngModel)]="expressionText"
+      (ngModelChange)="onExpressionChange($event)"
+      placeholder="e.g., (var1 + var2) * const1 ^ 2"
+      class="w-full"
+      [class.border-red-500]="!validationResult().isValid && expressionText.length > 0"
+      [class.border-green-500]="validationResult().isValid && expressionText.length > 0"
+    />
+    
+    <!-- Validation Success -->
+    <div *ngIf="validationResult().isValid && expressionText.length > 0" class="validation-success flex items-center gap-2 mt-2 text-green-600">
+      <i class="pi pi-check-circle"></i>
+      <span class="text-sm">Expression is valid</span>
+    </div>
+    
+    <!-- Validation Errors -->
+    <div *ngIf="!validationResult().isValid && validationResult().errors.length > 0" class="validation-errors mt-2">
+      <div class="flex items-start gap-2 text-red-600">
+        <i class="pi pi-times-circle mt-0.5"></i>
+        <div class="flex-1">
+          <ul class="text-sm space-y-1">
+            <li *ngFor="let error of validationResult().errors">{{ error }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Available Identifiers -->
+  <div class="available-identifiers">
+    <h4 class="font-semibold mb-2 text-sm text-gray-700">Available Identifiers:</h4>
+    <div *ngIf="availableIdentifiers().length === 0" class="text-sm text-gray-500 italic">
+      No variables or constants defined yet
+    </div>
+    <div *ngIf="availableIdentifiers().length > 0" class="identifier-list flex flex-wrap gap-2">
+      <span *ngFor="let id of availableIdentifiers()" class="identifier-badge px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-mono">
+        {{ id }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Supported Operators Info -->
+  <div class="mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+    <p class="text-sm text-gray-600">
+      <strong>Supported operators:</strong> + (addition), - (subtraction), * (multiplication), / (division), ^ (power), ( ) (parentheses)
+    </p>
+  </div>
+</div>

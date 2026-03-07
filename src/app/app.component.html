@@ -1,30 +1,12 @@
 <div class="min-h-screen bg-gray-50">
   <div class="p-6">
-    <!-- Model Builder Test Section -->
-    <div class="mb-6 bg-white rounded-lg shadow p-6">
-      <h2 class="text-2xl font-bold mb-4">Model Builder Test</h2>
-      <p-button 
-        label="Add Variable" 
-        icon="pi pi-plus" 
-        (onClick)="openVariableDialog()"
-      ></p-button>
-      
-      <div class="mt-4">
-        <h3 class="font-semibold mb-2">Variables ({{ modelService.variables().length }}):</h3>
-        <div *ngFor="let variable of modelService.variables()" class="p-2 bg-gray-100 rounded mb-2">
-          <strong>{{ variable.name }}</strong> - {{ variable.distribution.type }}
-          <span *ngIf="variable.distribution.type === 'Normal' || variable.distribution.type === 'Lognormal'">
-            (mean: {{ variable.distribution.mean }}, stdDev: {{ variable.distribution.stdDev }})
-          </span>
-          <span *ngIf="variable.distribution.type === 'Uniform'">
-            (min: {{ variable.distribution.min }}, max: {{ variable.distribution.max }})
-          </span>
-        </div>
-      </div>
-    </div>
+    <!-- Model Builder -->
+    <app-model-builder></app-model-builder>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Original Histogram Demo (below model builder) -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-xl font-semibold mb-4">Histogram Demo</h3>
         <form class="space-y-4" (submit)="greet($event, greetInput.value)">
           <input 
             #greetInput 
@@ -54,9 +36,3 @@
     <router-outlet />
   </div>
 </div>
-
-<!-- Variable Form Dialog -->
-<app-variable-form
-  [(visible)]="showVariableDialog"
-  (save)="onVariableSave($event)"
-></app-variable-form>

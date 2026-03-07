@@ -6,13 +6,11 @@ import { CardModule } from "primeng/card";
 import { ButtonModule } from "primeng/button";
 import { InputTextModule } from "primeng/inputtext";
 import { HistogramComponent } from "./shared/components/histogram/histogram.component";
-import { VariableFormComponent } from "./model-builder/variable-form/variable-form.component";
-import { Variable } from "./model-builder/models";
-import { ModelService } from "./model-builder/services";
+import { ModelBuilderComponent } from "./model-builder/model-builder.component";
 
 @Component({
   selector: "app-root",
-  imports: [CommonModule, RouterOutlet, CardModule, ButtonModule, InputTextModule, HistogramComponent, VariableFormComponent],
+  imports: [CommonModule, RouterOutlet, CardModule, ButtonModule, InputTextModule, HistogramComponent, ModelBuilderComponent],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.css",
 })
@@ -23,10 +21,7 @@ export class AppComponent {
   dataValues: WritableSignal<number[]> = signal([]);
   title: WritableSignal<string> = signal('Histogram');
 
-  // Model builder test
-  showVariableDialog = false;
-
-  constructor(public modelService: ModelService) {}
+  constructor() {}
 
 
   greet(event: SubmitEvent, name: string): void {
@@ -59,19 +54,5 @@ export class AppComponent {
       this.dataValues.set(dataValues);
       this.title.set('Normal Distribution Histogram');
     });
-  }
-
-  openVariableDialog(): void {
-    this.showVariableDialog = true;
-  }
-
-  onVariableSave(variable: Variable): void {
-    try {
-      this.modelService.addVariable(variable);
-      console.log('Variable added:', variable);
-      console.log('All variables:', this.modelService.variables());
-    } catch (error) {
-      console.error('Error adding variable:', error);
-    }
   }
 }

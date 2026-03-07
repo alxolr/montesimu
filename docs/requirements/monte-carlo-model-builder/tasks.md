@@ -187,8 +187,8 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Call ModelService.deleteConstant for delete action
     - _Requirements: 2.5, 2.6_
 
-- [ ] 9. Implement ExpressionInputComponent
-  - [ ] 9.1 Create component structure and template
+- [x] 9. Implement ExpressionInputComponent
+  - [x] 9.1 Create component structure and template
     - Create standalone component with PrimeNG InputText
     - Add text input bound to ModelService expression signal
     - Display validation status (valid/invalid) with icons
@@ -196,7 +196,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Display list of available identifiers
     - _Requirements: 3.6, 3.7, 4.1, 4.6_
   
-  - [ ] 9.2 Implement real-time validation
+  - [x] 9.2 Implement real-time validation
     - Update expression in ModelService on input change
     - Use computed signal for validation results
     - Display validation feedback immediately
@@ -219,15 +219,15 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
 - [ ] 10. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Implement ModelBuilderComponent (main container)
-  - [ ] 11.1 Create component structure and template
+- [x] 11. Implement ModelBuilderComponent (main container)
+  - [x] 11.1 Create component structure and template
     - Create standalone component with PrimeNG Card
     - Import and use VariableListComponent, ConstantListComponent, ExpressionInputComponent
     - Arrange sections in correct order (variables, constants, expression)
     - Apply TailwindCSS layout styling
     - _Requirements: 4.1, 4.2, 4.3, 4.7, 4.8, 7.1, 7.2_
   
-  - [ ] 11.2 Provide ModelService to child components
+  - [x] 11.2 Provide ModelService to child components
     - Inject ModelService at component level
     - Ensure all child components can access the service
     - _Requirements: 6.5, 6.6_
@@ -237,13 +237,13 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test that all three sections render
     - Test signal reactivity across components
 
-- [ ] 12. Add routing and integrate into application
-  - [ ] 12.1 Add route for ModelBuilderComponent
+- [x] 12. Add routing and integrate into application
+  - [x] 12.1 Add route for ModelBuilderComponent
     - Update app.routes.ts to include model-builder route
     - Add navigation link in main app component
     - _Requirements: 7.1_
   
-  - [ ] 12.2 Test end-to-end workflow
+  - [x] 12.2 Test end-to-end workflow
     - Manually test creating variables, constants, and expressions
     - Verify all validation works correctly
     - Verify UI updates reactively
