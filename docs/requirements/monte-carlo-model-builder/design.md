@@ -15,6 +15,32 @@ The design emphasizes immediate validation feedback, clear visual organization, 
 
 ### Component Structure
 
+**Component Hierarchy**
+
+```mermaid
+graph TD
+    MB[Model Builder Component]
+    
+    MB --> VL[Variable List]
+    MB --> CL[Constant List]
+    MB --> EI[Expression Input]
+    
+    VL --> VF[Variable Form Dialog]
+    VF --> DP[Distribution Preview]
+    
+    CL --> CF[Constant Form Dialog]
+    
+    MB --> MS[Model Service]
+    VL --> MS
+    CL --> MS
+    EI --> MS
+    
+    MS --> EV[Expression Validator]
+    MS --> IV[Identifier Validator]
+    DP --> PC[PDF Calculator]
+```
+
+**File Structure**
 ```
 model-builder/
 ├── model-builder.component.ts          # Main container component
@@ -76,6 +102,23 @@ export class ModelService {
 ```
 
 ### Data Flow
+
+**State Update Flow**
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Component
+    participant Service as Model Service
+    participant Signal
+    participant UI
+    
+    User->>Component: Perform Action
+    Component->>Service: Call Method
+    Service->>Signal: Update Signal
+    Signal->>UI: Trigger Reactivity
+    UI->>User: Display Update
+```
 
 1. **User Action** → Component emits event
 2. **Component** → Calls service method
