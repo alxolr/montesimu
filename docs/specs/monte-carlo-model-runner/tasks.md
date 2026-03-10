@@ -6,7 +6,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
 
 ## Tasks
 
-- [ ] 1. Set up Rust backend structure and dependencies
+- [x] 1. Set up Rust backend structure and dependencies
   - Add required dependencies to Cargo.toml (rand, rand_distr, serde, serde_json)
   - Create module structure for simulation engine
   - Set up Tauri command infrastructure

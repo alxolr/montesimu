@@ -1,5 +1,6 @@
 pub mod greet;
 pub mod histogram;
+pub mod simulation;
 
 use shaku::module;
 

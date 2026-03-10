@@ -51,6 +51,8 @@ inclusion: auto
 - Organize code into modules: `commands/`, `services/`, `dtos/`
 - Use `mod.rs` for module exports
 - Keep business logic in services, not commands
+- For large features with multiple services, create a subfolder under `services/{feature}/`
+- Example: `services/simulation/` for simulation engine with parser, evaluator, sampler services
 
 ### Dependency Injection (Shaku)
 - Define traits for service interfaces

@@ -21,6 +21,79 @@ Montesimu follows a clean architecture approach with clear separation between fr
 └─────────────────────────────────────┘
 ```
 
+### Module Organization
+
+#### DTOs (Data Transfer Objects)
+DTOs define data contracts between layers and should be organized by feature module:
+
+**Small Features:**
+For simple DTOs used by a single command, place them directly in `dtos/`:
+```
+dtos/
+├── histogram.rs
+└── mod.rs
+```
+
+**Large Features:**
+For complex features with multiple related DTOs, create a subfolder under `dtos/`:
+```
+dtos/
+├── simulation/              # Large module for simulation DTOs
+│   ├── model.rs            # ModelDefinition, Variable, Constant
+│   ├── distribution.rs     # Distribution enum
+│   ├── results.rs          # SimulationResults
+│   └── mod.rs              # Module exports
+├── histogram.rs
+└── mod.rs
+```
+
+**When to use a subfolder:**
+- Feature has 3+ related DTOs
+- DTOs share common types or enums
+- Clear domain boundary exists
+- DTOs are used across multiple commands/services
+
+**Benefits:**
+- Clear separation of data contracts
+- Easier to locate and maintain DTOs
+- Prevents dtos/mod.rs from becoming cluttered
+- Mirrors the service module organization
+
+#### Small Services
+For simple, focused services, place them directly in the `services/` folder:
+```
+services/
+├── greet.rs
+├── histogram.rs
+└── mod.rs
+```
+
+#### Large Service Modules
+For complex features with multiple related services, create a subfolder under `services/`:
+```
+services/
+├── simulation/              # Large module for simulation feature
+│   ├── engine.rs           # Main simulation engine service
+│   ├── parser.rs           # Expression parser service
+│   ├── evaluator.rs        # Expression evaluator service
+│   ├── sampler.rs          # Distribution sampler service
+│   └── mod.rs              # Module exports
+├── greet.rs
+└── mod.rs
+```
+
+**When to use a subfolder:**
+- Feature requires 3+ related services
+- Services share internal types/utilities
+- Clear domain boundary exists
+- Services work together as a cohesive unit
+
+**Benefits:**
+- Better organization for complex features
+- Encapsulation of related functionality
+- Easier to navigate and maintain
+- Clear module boundaries
+
 ### Dependency Injection Pattern
 Uses Shaku for IoC (Inversion of Control):
 

@@ -2,6 +2,7 @@ use shaku::HasComponent;
 use tauri::{Manager, State};
 
 use crate::commands::histogram;
+use crate::commands::simulation;
 use crate::services::{greet::GreetService, Container};
 
 #[tauri::command]
@@ -27,7 +28,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
-            histogram::generate_histogram
+            histogram::generate_histogram,
+            simulation::run_simulation
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
