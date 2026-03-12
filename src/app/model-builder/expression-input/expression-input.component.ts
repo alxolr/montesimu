@@ -15,15 +15,15 @@ export class ExpressionInputComponent {
   expressionText: string = '';
 
   // Computed signals from ModelService
-  validationResult = computed(() => this.modelService.expressionValidation());
+  validationResult = computed(() => this.modelService.targetExpressionValidation());
   availableIdentifiers = computed(() => this.modelService.allIdentifiers());
 
   constructor(private modelService: ModelService) {
-    // Initialize with current expression
-    this.expressionText = this.modelService.expression();
+    // Initialize with current target expression
+    this.expressionText = this.modelService.targetExpression();
   }
 
   onExpressionChange(value: string): void {
-    this.modelService.setExpression(value);
+    this.modelService.setTargetExpression(value);
   }
 }

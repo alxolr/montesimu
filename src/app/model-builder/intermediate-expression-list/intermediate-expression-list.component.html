@@ -88,7 +88,8 @@
 
   <!-- Form Dialog -->
   <app-intermediate-expression-form
-    [(visible)]="formDialogVisible()"
+    [visible]="formDialogVisible()"
+    (visibleChange)="formDialogVisible.set($event)"
     [expression]="selectedExpression()"
   />
 </div>
