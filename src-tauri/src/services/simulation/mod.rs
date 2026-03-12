@@ -1,6 +1,7 @@
 pub mod lexer;
 pub mod parser;
 pub mod analyzer;
+pub mod evaluator;
 pub mod service;
 
 #[cfg(test)]
@@ -10,4 +11,5 @@ mod tests;
 pub use lexer::{Token, tokenize};
 pub use parser::{Expr, Operator, parse_expression, validate_syntax};
 pub use analyzer::{extract_identifiers, build_dependency_graph, topological_sort};
+pub use evaluator::Evaluator;
 pub use service::{SimulationService, SimulationServiceImpl};
