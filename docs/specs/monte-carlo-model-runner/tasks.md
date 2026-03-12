@@ -12,8 +12,8 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
   - Set up Tauri command infrastructure
   - _Requirements: 2.6, 3.1_
 
-- [ ] 2. Implement expression parser in Rust
-  - [ ] 2.1 Create AST data structures (Expr, Operator enums)
+- [-] 2. Implement expression parser in Rust
+  - [x] 2.1 Create AST data structures (Expr, Operator enums)
     - Define expression tree node types
     - Implement Display trait for debugging
     - _Requirements: 3.1_

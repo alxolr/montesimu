@@ -15,6 +15,7 @@ fn greet(state: State<'_, Container>, name: &str) -> String {
 pub mod commands;
 pub mod dtos;
 pub mod services;
+pub mod sim_engine;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
