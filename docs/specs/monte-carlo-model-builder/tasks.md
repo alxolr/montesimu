@@ -45,21 +45,21 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - **Property 11: Operator Support**
     - **Validates: Requirements 2.6, 3.3**
 
-- [ ] 2.7 Implement DependencyGraphService
-  - [ ] 2.7.1 Create DependencyGraphService with graph building
+- [x] 2.7 Implement DependencyGraphService
+  - [x] 2.7.1 Create DependencyGraphService with graph building
     - Implement `buildGraph()` method to construct dependency graph
     - Implement `extractIdentifiers()` method to parse formulas
     - Create DependencyNode interface
     - _Requirements: 5.1_
   
-  - [ ] 2.7.2 Implement circular reference detection
+  - [x] 2.7.2 Implement circular reference detection
     - Implement `detectCircularReference()` using DFS with recursion stack
     - Implement cycle path reconstruction for error messages
     - Implement `wouldCreateCycle()` for pre-validation
     - Return CircularReferenceError with cycle path
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
   
-  - [ ] 2.7.3 Implement topological sorting
+  - [x] 2.7.3 Implement topological sorting
     - Implement `getEvaluationOrder()` using Kahn's algorithm
     - Calculate in-degrees for all nodes
     - Process nodes in dependency order

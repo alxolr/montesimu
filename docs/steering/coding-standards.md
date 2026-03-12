@@ -33,6 +33,14 @@ inclusion: auto
 - Shared components go in `src/app/shared/components/`
 - Core services go in `src/app/core/`
 
+### Service File Size Limits
+- **Maximum 200 lines of actual logic per service file**
+- If tests are in the same file, test code doesn't count toward the 200-line limit
+- If a service exceeds 200 lines of logic, split it into multiple focused services
+- Example: Split a large `ModelService` into `ModelStateService`, `ModelValidationService`, `ModelPersistenceService`
+- Each service should have a single, well-defined responsibility
+- Use composition to combine multiple services when needed
+
 ### Angular Specific
 - Use `inject()` function for dependency injection in modern Angular
 - Prefer `@Input()` signals for component inputs when possible
@@ -53,6 +61,14 @@ inclusion: auto
 - Keep business logic in services, not commands
 - For large features with multiple services, create a subfolder under `services/{feature}/`
 - Example: `services/simulation/` for simulation engine with parser, evaluator, sampler services
+
+### Service File Size Limits
+- **Maximum 200 lines of actual logic per service file**
+- If tests are in the same file with `#[cfg(test)]`, test code doesn't count toward the 200-line limit
+- If a service exceeds 200 lines of logic, split it into multiple focused services
+- Example: Split a large simulation engine into `parser.rs`, `evaluator.rs`, `sampler.rs`, `engine.rs`
+- Each service should have a single, well-defined responsibility
+- Use traits and composition to combine multiple services when needed
 
 ### Dependency Injection (Shaku)
 - Define traits for service interfaces
