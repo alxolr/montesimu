@@ -103,7 +103,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Validate uniqueness across variables and intermediate expressions
     - _Requirements: 1.6, 1.7, 1.8_
   
-  - [ ] 3.3 Implement intermediate expression CRUD operations
+  - [x] 3.3 Implement intermediate expression CRUD operations
     - Implement addIntermediateExpression, updateIntermediateExpression, deleteIntermediateExpression methods
     - Return Result type with success/error for operations that can fail
     - Check for circular references before adding/updating
@@ -118,7 +118,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Create computed signal for validation results
     - _Requirements: 3.6, 3.7, 3.8_
   
-  - [ ] 3.5 Implement helper methods
+  - [x] 3.5 Implement helper methods
     - Implement getDependencies(formula: string) to extract identifiers
     - Implement getExpressionsReferencingIdentifier(identifier: string)
     - Implement isIdentifierUnique with namespace checking

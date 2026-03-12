@@ -1,6 +1,8 @@
 import { Variable } from './variable.model';
+import { IntermediateExpression } from './intermediate-expression.model';
 
 export interface ModelState {
   variables: Variable[];
-  expression: string;
+  intermediateExpressions: IntermediateExpression[];
+  targetExpression: string;
 }
