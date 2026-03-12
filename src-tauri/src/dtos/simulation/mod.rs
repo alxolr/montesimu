@@ -4,5 +4,5 @@ pub mod model;
 pub mod results;
 
 pub use distribution::Distribution;
-pub use model::{ModelDefinition, Variable};
+pub use model::{IntermediateExpression, ModelDefinition, Variable};
 pub use results::SimulationResults;
