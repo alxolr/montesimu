@@ -97,6 +97,142 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, String> {
     Ok(tokens)
 }
 
+/// Parser for converting tokens into an AST
+struct Parser {
+    tokens: Vec<Token>,
+    position: usize,
+}
+
+impl Parser {
+    fn new(tokens: Vec<Token>) -> Self {
+        Parser {
+            tokens,
+            position: 0,
+        }
+    }
+
+    fn current(&self) -> Option<&Token> {
+        self.tokens.get(self.position)
+    }
+
+    fn advance(&mut self) {
+        self.position += 1;
+    }
+
+    fn parse(&mut self) -> Result<Expr, String> {
+        if self.tokens.is_empty() {
+            return Err("Empty expression".to_string());
+        }
+        let expr = self.parse_additive()?;
+        if self.position < self.tokens.len() {
+            return Err(format!(
+                "Unexpected token at position {}: {:?}",
+                self.position,
+                self.current()
+            ));
+        }
+        Ok(expr)
+    }
+
+    // Parse addition and subtraction (lowest precedence)
+    fn parse_additive(&mut self) -> Result<Expr, String> {
+        let mut left = self.parse_multiplicative()?;
+
+        while let Some(token) = self.current() {
+            match token {
+                Token::Plus => {
+                    self.advance();
+                    let right = self.parse_multiplicative()?;
+                    left = Expr::BinaryOp {
+                        op: Operator::Add,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
+                }
+                Token::Minus => {
+                    self.advance();
+                    let right = self.parse_multiplicative()?;
+                    left = Expr::BinaryOp {
+                        op: Operator::Subtract,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
+                }
+                _ => break,
+            }
+        }
+
+        Ok(left)
+    }
+
+    // Parse multiplication and division (higher precedence)
+    fn parse_multiplicative(&mut self) -> Result<Expr, String> {
+        let mut left = self.parse_primary()?;
+
+        while let Some(token) = self.current() {
+            match token {
+                Token::Star => {
+                    self.advance();
+                    let right = self.parse_primary()?;
+                    left = Expr::BinaryOp {
+                        op: Operator::Multiply,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
+                }
+                Token::Slash => {
+                    self.advance();
+                    let right = self.parse_primary()?;
+                    left = Expr::BinaryOp {
+                        op: Operator::Divide,
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    };
+                }
+                _ => break,
+            }
+        }
+
+        Ok(left)
+    }
+
+    // Parse primary expressions (numbers, identifiers, parenthesized expressions)
+    fn parse_primary(&mut self) -> Result<Expr, String> {
+        match self.current() {
+            Some(Token::Number(n)) => {
+                let num = *n;
+                self.advance();
+                Ok(Expr::Number(num))
+            }
+            Some(Token::Identifier(id)) => {
+                let identifier = id.clone();
+                self.advance();
+                Ok(Expr::Identifier(identifier))
+            }
+            Some(Token::LeftParen) => {
+                self.advance();
+                let expr = self.parse_additive()?;
+                match self.current() {
+                    Some(Token::RightParen) => {
+                        self.advance();
+                        Ok(expr)
+                    }
+                    _ => Err("Expected closing parenthesis".to_string()),
+                }
+            }
+            Some(token) => Err(format!("Unexpected token: {:?}", token)),
+            None => Err("Unexpected end of expression".to_string()),
+        }
+    }
+}
+
+/// Parses an expression string into an AST
+pub fn parse_expression(input: &str) -> Result<Expr, String> {
+    let tokens = tokenize(input)?;
+    let mut parser = Parser::new(tokens);
+    parser.parse()
+}
+
 /// Represents a mathematical operator
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
@@ -331,5 +467,200 @@ mod tests {
     fn test_tokenize_whitespace_only() {
         let tokens = tokenize("   \t\n  ").unwrap();
         assert_eq!(tokens, vec![]);
+    }
+
+    // Parser tests
+    #[test]
+    fn test_parse_number() {
+        let expr = parse_expression("42").unwrap();
+        assert_eq!(expr, Expr::Number(42.0));
+    }
+
+    #[test]
+    fn test_parse_identifier() {
+        let expr = parse_expression("x").unwrap();
+        assert_eq!(expr, Expr::Identifier("x".to_string()));
+    }
+
+    #[test]
+    fn test_parse_addition() {
+        let expr = parse_expression("1 + 2").unwrap();
+        match expr {
+            Expr::BinaryOp { op, left, right } => {
+                assert_eq!(op, Operator::Add);
+                assert_eq!(*left, Expr::Number(1.0));
+                assert_eq!(*right, Expr::Number(2.0));
+            }
+            _ => panic!("Expected BinaryOp"),
+        }
+    }
+
+    #[test]
+    fn test_parse_subtraction() {
+        let expr = parse_expression("5 - 3").unwrap();
+        match expr {
+            Expr::BinaryOp { op, left, right } => {
+                assert_eq!(op, Operator::Subtract);
+                assert_eq!(*left, Expr::Number(5.0));
+                assert_eq!(*right, Expr::Number(3.0));
+            }
+            _ => panic!("Expected BinaryOp"),
+        }
+    }
+
+    #[test]
+    fn test_parse_multiplication() {
+        let expr = parse_expression("3 * 4").unwrap();
+        match expr {
+            Expr::BinaryOp { op, left, right } => {
+                assert_eq!(op, Operator::Multiply);
+                assert_eq!(*left, Expr::Number(3.0));
+                assert_eq!(*right, Expr::Number(4.0));
+            }
+            _ => panic!("Expected BinaryOp"),
+        }
+    }
+
+    #[test]
+    fn test_parse_division() {
+        let expr = parse_expression("8 / 2").unwrap();
+        match expr {
+            Expr::BinaryOp { op, left, right } => {
+                assert_eq!(op, Operator::Divide);
+                assert_eq!(*left, Expr::Number(8.0));
+                assert_eq!(*right, Expr::Number(2.0));
+            }
+            _ => panic!("Expected BinaryOp"),
+        }
+    }
+
+    #[test]
+    fn test_parse_operator_precedence() {
+        // 2 + 3 * 4 should parse as 2 + (3 * 4)
+        let expr = parse_expression("2 + 3 * 4").unwrap();
+        match expr {
+            Expr::BinaryOp {
+                op: Operator::Add,
+                left,
+                right,
+            } => {
+                assert_eq!(*left, Expr::Number(2.0));
+                match *right {
+                    Expr::BinaryOp {
+                        op: Operator::Multiply,
+                        left: mult_left,
+                        right: mult_right,
+                    } => {
+                        assert_eq!(*mult_left, Expr::Number(3.0));
+                        assert_eq!(*mult_right, Expr::Number(4.0));
+                    }
+                    _ => panic!("Expected multiplication on right side"),
+                }
+            }
+            _ => panic!("Expected addition at top level"),
+        }
+    }
+
+    #[test]
+    fn test_parse_parentheses() {
+        // (2 + 3) * 4 should parse as (2 + 3) * 4
+        let expr = parse_expression("(2 + 3) * 4").unwrap();
+        match expr {
+            Expr::BinaryOp {
+                op: Operator::Multiply,
+                left,
+                right,
+            } => {
+                match *left {
+                    Expr::BinaryOp {
+                        op: Operator::Add,
+                        left: add_left,
+                        right: add_right,
+                    } => {
+                        assert_eq!(*add_left, Expr::Number(2.0));
+                        assert_eq!(*add_right, Expr::Number(3.0));
+                    }
+                    _ => panic!("Expected addition in parentheses"),
+                }
+                assert_eq!(*right, Expr::Number(4.0));
+            }
+            _ => panic!("Expected multiplication at top level"),
+        }
+    }
+
+    #[test]
+    fn test_parse_nested_parentheses() {
+        let expr = parse_expression("((1 + 2) * 3)").unwrap();
+        match expr {
+            Expr::BinaryOp {
+                op: Operator::Multiply,
+                ..
+            } => {}
+            _ => panic!("Expected multiplication"),
+        }
+    }
+
+    #[test]
+    fn test_parse_with_identifiers() {
+        let expr = parse_expression("x + y * 2").unwrap();
+        match expr {
+            Expr::BinaryOp {
+                op: Operator::Add,
+                left,
+                right,
+            } => {
+                assert_eq!(*left, Expr::Identifier("x".to_string()));
+                match *right {
+                    Expr::BinaryOp {
+                        op: Operator::Multiply,
+                        left: mult_left,
+                        right: mult_right,
+                    } => {
+                        assert_eq!(*mult_left, Expr::Identifier("y".to_string()));
+                        assert_eq!(*mult_right, Expr::Number(2.0));
+                    }
+                    _ => panic!("Expected multiplication"),
+                }
+            }
+            _ => panic!("Expected addition"),
+        }
+    }
+
+    #[test]
+    fn test_parse_complex_expression() {
+        let expr = parse_expression("(a + b) / (c - d)").unwrap();
+        match expr {
+            Expr::BinaryOp {
+                op: Operator::Divide,
+                ..
+            } => {}
+            _ => panic!("Expected division"),
+        }
+    }
+
+    #[test]
+    fn test_parse_empty_expression() {
+        let result = parse_expression("");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Empty expression"));
+    }
+
+    #[test]
+    fn test_parse_unbalanced_parentheses() {
+        let result = parse_expression("(1 + 2");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("closing parenthesis"));
+    }
+
+    #[test]
+    fn test_parse_unexpected_token() {
+        let result = parse_expression("1 + + 2");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_trailing_operator() {
+        let result = parse_expression("1 + 2 +");
+        assert!(result.is_err());
     }
 }

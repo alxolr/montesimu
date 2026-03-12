@@ -23,7 +23,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
     - Handle numbers, identifiers, operators, parentheses
     - _Requirements: 3.2_
   
-  - [ ] 2.3 Implement recursive descent parser
+  - [x] 2.3 Implement recursive descent parser
     - Parse tokens into AST
     - Handle operator precedence (*, / before +, -)
     - Handle parentheses for grouping
