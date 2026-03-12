@@ -293,11 +293,11 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - **Property 7: Complete List Display**
     - **Validates: Requirements 1.9**
 
-- [ ] 7. Implement ExpressionInputComponent (DEPRECATED - replaced by IntermediateExpressionListComponent and TargetExpressionInputComponent)
+- [x] 7. Implement ExpressionInputComponent (DEPRECATED - replaced by IntermediateExpressionListComponent and TargetExpressionInputComponent)
   - This component is no longer used in the nested expressions design
   - See tasks 4.6 and 4.7 for replacement components
 
-- [ ] 8. Checkpoint - Ensure all tests pass
+- [x] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 8.5 Implement PDF calculation service
@@ -369,7 +369,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test preview component receives correct input parameters
     - Test layout structure (left/right arrangement)
 
-- [ ] 9. Checkpoint - Ensure all tests pass
+- [x] 9. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 10. Implement ModelBuilderComponent (main container)
@@ -405,7 +405,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test edit and delete operations
     - Test evaluation order computation
 
-- [ ] 12. Final checkpoint - Ensure all tests pass
+- [x] 12. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
