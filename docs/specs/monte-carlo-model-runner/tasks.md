@@ -18,7 +18,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
     - Implement Display trait for debugging
     - _Requirements: 3.1_
   
-  - [ ] 2.2 Implement tokenizer
+  - [x] 2.2 Implement tokenizer
     - Parse expression string into tokens
     - Handle numbers, identifiers, operators, parentheses
     - _Requirements: 3.2_
