@@ -3,7 +3,7 @@
     <ng-template pTemplate="header">
       <div class="p-6 pb-0">
         <h2 class="text-3xl font-bold text-gray-800">Monte Carlo Model Builder</h2>
-        <p class="text-gray-600 mt-2">Define variables and mathematical expressions for your simulation model</p>
+        <p class="text-gray-600 mt-2">Define variables, intermediate expressions, and target expression for your simulation model</p>
       </div>
     </ng-template>
 
@@ -16,9 +16,17 @@
       <!-- Divider -->
       <div class="border-t border-gray-200"></div>
 
-      <!-- Expression Section -->
+      <!-- Intermediate Expressions Section -->
       <div class="section">
-        <app-expression-input></app-expression-input>
+        <app-intermediate-expression-list></app-intermediate-expression-list>
+      </div>
+
+      <!-- Divider -->
+      <div class="border-t border-gray-200"></div>
+
+      <!-- Target Expression Section -->
+      <div class="section">
+        <app-target-expression-input></app-target-expression-input>
       </div>
     </div>
   </p-card>

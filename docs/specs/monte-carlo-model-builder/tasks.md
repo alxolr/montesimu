@@ -204,8 +204,8 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test dependencies display
     - Test delete prevention with error message
 
-- [ ] 4.7 Implement TargetExpressionInputComponent
-  - [ ] 4.7.1 Create component structure and template
+- [x] 4.7 Implement TargetExpressionInputComponent
+  - [x] 4.7.1 Create component structure and template
     - Create standalone component with PrimeNG InputText
     - Add text input bound to ModelService targetExpression signal
     - Display validation status (valid/invalid) with icons
@@ -214,7 +214,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Display dependencies
     - _Requirements: 3.6, 3.7, 6.1, 6.5, 6.6_
   
-  - [ ] 4.7.2 Implement real-time validation
+  - [x] 4.7.2 Implement real-time validation
     - Update target expression in ModelService on input change
     - Use computed signal for validation results
     - Display validation feedback immediately

@@ -1,0 +1,68 @@
+<div class="target-expression-section mb-6">
+  <h3 class="text-xl font-semibold text-gray-800 mb-4">Target Expression</h3>
+
+  <div class="space-y-4">
+    <!-- Expression Input -->
+    <div class="form-field">
+      <label for="targetExpression" class="block text-sm font-medium text-gray-700 mb-1">
+        Expression <span class="text-red-500">*</span>
+      </label>
+      <input 
+        pInputText 
+        id="targetExpression"
+        [(ngModel)]="expressionText"
+        (ngModelChange)="onExpressionChange($event)"
+        [class.ng-invalid]="!validationResult().isValid && expressionText !== ''"
+        class="w-full"
+        placeholder="e.g., (var1 + var2) * exp1"
+      />
+      
+      <!-- Validation Feedback -->
+      <div *ngIf="validationResult().isValid && expressionText !== ''" class="validation-success mt-2 flex items-center text-green-600">
+        <i class="pi pi-check-circle mr-2"></i>
+        <span class="text-sm">Expression is valid</span>
+      </div>
+      
+      <div *ngIf="!validationResult().isValid && validationResult().errors.length > 0" class="validation-errors mt-2">
+        <div class="flex items-start text-red-600">
+          <i class="pi pi-times-circle mr-2 mt-0.5"></i>
+          <ul class="text-sm space-y-1">
+            <li *ngFor="let error of validationResult().errors">{{ error }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependencies -->
+    <div *ngIf="dependencies().length > 0" class="dependencies-info p-3 bg-blue-50 rounded-lg border border-blue-200">
+      <h4 class="text-sm font-medium text-blue-900 mb-2">Dependencies</h4>
+      <div class="flex flex-wrap gap-2">
+        <span 
+          *ngFor="let dep of dependencies()"
+          class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-mono"
+        >
+          {{ dep }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Available Identifiers -->
+    <div class="available-identifiers p-3 bg-gray-50 rounded-lg border border-gray-200">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Available Identifiers</h4>
+      <div class="flex flex-wrap gap-2">
+        <span 
+          *ngFor="let id of availableIdentifiers()"
+          class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm font-mono"
+        >
+          {{ id }}
+        </span>
+        <span 
+          *ngIf="availableIdentifiers().length === 0"
+          class="text-gray-500 text-sm italic"
+        >
+          No identifiers defined yet. Add variables or intermediate expressions first.
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

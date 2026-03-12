@@ -1,0 +1,26 @@
+.target-expression-section {
+  width: 100%;
+}
+
+.form-field {
+  margin-bottom: 1rem;
+}
+
+.validation-success {
+  font-weight: 500;
+}
+
+.validation-errors ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+:host ::ng-deep .ng-invalid.ng-touched {
+  border-color: #ef4444;
+}
+
+.dependencies-info,
+.available-identifiers {
+  transition: all 0.2s ease;
+}
