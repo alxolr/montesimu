@@ -1,0 +1,94 @@
+<div class="intermediate-expression-section mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-xl font-semibold text-gray-800">Intermediate Expressions</h3>
+    <p-button 
+      label="Add Expression" 
+      icon="pi pi-plus"
+      (onClick)="openAddDialog()"
+      size="small"
+    />
+  </div>
+
+  <!-- Empty State -->
+  <div 
+    *ngIf="modelService.intermediateExpressions().length === 0" 
+    class="empty-state p-6 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300"
+  >
+    <i class="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
+    <p class="text-gray-600">No intermediate expressions defined.</p>
+    <p class="text-gray-500 text-sm">Click "Add Expression" to create one.</p>
+  </div>
+
+  <!-- Expression List -->
+  <div *ngIf="modelService.intermediateExpressions().length > 0" class="space-y-3">
+    <div 
+      *ngFor="let expr of modelService.intermediateExpressions()"
+      class="expression-item p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors"
+    >
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <!-- Expression Name and Formula -->
+          <div class="mb-2">
+            <span class="font-mono font-semibold text-blue-600">{{ expr.name }}</span>
+            <span class="text-gray-600 mx-2">=</span>
+            <span class="font-mono text-gray-800">{{ expr.formula }}</span>
+          </div>
+
+          <!-- Dependencies -->
+          <div class="text-sm text-gray-600 mb-1">
+            <span class="font-medium">Depends on:</span>
+            <span *ngIf="getDependencies(expr).length === 0" class="italic ml-1">
+              (none)
+            </span>
+            <span 
+              *ngFor="let dep of getDependencies(expr); let last = last"
+              class="ml-1"
+            >
+              <span class="font-mono text-blue-600">{{ dep }}</span><span *ngIf="!last">,</span>
+            </span>
+          </div>
+
+          <!-- Referenced By -->
+          <div class="text-sm text-gray-600">
+            <span class="font-medium">Referenced by:</span>
+            <span *ngIf="getReferencedBy(expr).length === 0" class="italic ml-1">
+              (none)
+            </span>
+            <span 
+              *ngFor="let ref of getReferencedBy(expr); let last = last"
+              class="ml-1"
+            >
+              <span class="font-mono text-purple-600">{{ ref }}</span><span *ngIf="!last">,</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-2 ml-4">
+          <p-button 
+            icon="pi pi-pencil"
+            (onClick)="openEditDialog(expr)"
+            [outlined]="true"
+            size="small"
+            severity="secondary"
+            pTooltip="Edit expression"
+          />
+          <p-button 
+            icon="pi pi-trash"
+            (onClick)="deleteExpression(expr)"
+            [outlined]="true"
+            size="small"
+            severity="danger"
+            pTooltip="Delete expression"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Dialog -->
+  <app-intermediate-expression-form
+    [(visible)]="formDialogVisible()"
+    [expression]="selectedExpression()"
+  />
+</div>

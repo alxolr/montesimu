@@ -148,15 +148,15 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
 - [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4.5 Implement IntermediateExpressionFormComponent
-  - [ ] 4.5.1 Create component structure and template
+- [x] 4.5 Implement IntermediateExpressionFormComponent
+  - [x] 4.5.1 Create component structure and template
     - Create standalone component with PrimeNG Dialog, InputText
     - Set up form with name and formula fields
     - Display available identifiers list
     - Add TailwindCSS styling for layout
     - _Requirements: 2.1, 2.2, 6.4, 6.7, 6.8_
   
-  - [ ] 4.5.2 Implement form validation logic
+  - [x] 4.5.2 Implement form validation logic
     - Inject IdentifierValidatorService, ExpressionValidatorService, and ModelService
     - Validate name format and uniqueness across all identifiers
     - Validate formula syntax and identifier references
@@ -164,7 +164,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Display inline error messages
     - _Requirements: 2.2, 2.3, 2.4, 2.5, 2.7, 2.8, 4.1, 4.2, 4.5, 7.1, 7.3, 7.4, 7.7_
   
-  - [ ] 4.5.3 Implement form submission
+  - [x] 4.5.3 Implement form submission
     - Prevent submission if form is invalid
     - Call ModelService to add or update intermediate expression
     - Handle Result type and display errors if operation fails
@@ -181,8 +181,8 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Test circular reference error display
     - Test duplicate name error display
 
-- [ ] 4.6 Implement IntermediateExpressionListComponent
-  - [ ] 4.6.1 Create component structure and template
+- [x] 4.6 Implement IntermediateExpressionListComponent
+  - [x] 4.6.1 Create component structure and template
     - Create standalone component with PrimeNG Card, Button
     - Display list of intermediate expressions from ModelService signal
     - Add "Add Expression" button
@@ -191,7 +191,7 @@ This implementation plan breaks down the Monte Carlo Model Builder UI feature in
     - Display dependencies for each expression
     - _Requirements: 2.13, 6.1, 6.2, 6.4, 6.6_
   
-  - [ ] 4.6.2 Implement expression management actions
+  - [x] 4.6.2 Implement expression management actions
     - Open IntermediateExpressionFormComponent dialog for add/edit
     - Call ModelService.deleteIntermediateExpression for delete action
     - Handle Result type and display error if deletion fails (dependencies exist)

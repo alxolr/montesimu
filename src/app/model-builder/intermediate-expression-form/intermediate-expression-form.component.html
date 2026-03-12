@@ -1,0 +1,84 @@
+<p-dialog 
+  [(visible)]="visible" 
+  [header]="isEditMode ? 'Edit Intermediate Expression' : 'Add Intermediate Expression'"
+  [modal]="true"
+  [style]="{width: '600px'}"
+  (onHide)="onCancel()"
+>
+  <form (submit)="onSubmit($event)" class="space-y-4">
+    <!-- Name Field -->
+    <div class="form-field">
+      <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+        Name <span class="text-red-500">*</span>
+      </label>
+      <input 
+        pInputText 
+        id="name"
+        [(ngModel)]="formData.name"
+        name="name"
+        (ngModelChange)="validateName()"
+        [class.ng-invalid]="nameError() !== ''"
+        class="w-full"
+        placeholder="e.g., exp1, revenue, cost"
+        required
+      />
+      <small *ngIf="nameError()" class="text-red-500 block mt-1">
+        {{ nameError() }}
+      </small>
+    </div>
+
+    <!-- Formula Field -->
+    <div class="form-field">
+      <label for="formula" class="block text-sm font-medium text-gray-700 mb-1">
+        Formula <span class="text-red-500">*</span>
+      </label>
+      <input 
+        pInputText 
+        id="formula"
+        [(ngModel)]="formData.formula"
+        name="formula"
+        (ngModelChange)="validateFormula()"
+        [class.ng-invalid]="formulaError() !== ''"
+        class="w-full"
+        placeholder="e.g., var1 + var2, exp1 * 2"
+        required
+      />
+      <small *ngIf="formulaError()" class="text-red-500 block mt-1">
+        {{ formulaError() }}
+      </small>
+    </div>
+
+    <!-- Available Identifiers -->
+    <div class="available-identifiers">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Available Identifiers</h4>
+      <div class="flex flex-wrap gap-2">
+        <span 
+          *ngFor="let id of modelService.allIdentifiers()"
+          class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm"
+        >
+          {{ id }}
+        </span>
+        <span 
+          *ngIf="modelService.allIdentifiers().length === 0"
+          class="text-gray-500 text-sm italic"
+        >
+          No identifiers defined yet
+        </span>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button 
+      label="Cancel" 
+      (onClick)="onCancel()"
+      [outlined]="true"
+      severity="secondary"
+    />
+    <p-button 
+      label="Save" 
+      (onClick)="onSubmit($event)"
+      [disabled]="!isFormValid()"
+    />
+  </ng-template>
+</p-dialog>
