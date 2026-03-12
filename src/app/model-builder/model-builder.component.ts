@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { VariableListComponent } from './variable-list/variable-list.component';
-import { ConstantListComponent } from './constant-list/constant-list.component';
 import { ExpressionInputComponent } from './expression-input/expression-input.component';
 import { ModelService } from './services/model.service';
 
@@ -13,7 +12,6 @@ import { ModelService } from './services/model.service';
     CommonModule,
     CardModule,
     VariableListComponent,
-    ConstantListComponent,
     ExpressionInputComponent
   ],
   templateUrl: './model-builder.component.html',

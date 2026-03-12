@@ -522,7 +522,6 @@ async fn run_simulation(model: ModelDefinition) -> Result<SimulationResults, Str
 ```rust
 pub struct SimulationEngine {
     variables: Vec<Variable>,
-    constants: HashMap<String, f64>,
     iteration_count: usize,
 }
 
@@ -580,7 +579,7 @@ pub fn parse_expression(input: &str) -> Result<Expr, String>;
 
 #### ExpressionEvaluator
 
-**Purpose**: Evaluate parsed expressions with variable and constant values.
+**Purpose**: Evaluate parsed expressions with variable values.
 
 **Responsibilities**:
 - Traverse AST
@@ -655,14 +654,8 @@ export interface Variable {
   distribution: Distribution;
 }
 
-export interface Constant {
-  name: string;
-  value: number;
-}
-
 export interface ModelState {
   variables: Variable[];
-  constants: Constant[];
   expression: string;
 }
 
@@ -673,7 +666,6 @@ export interface SimulationConfig {
 
 export interface ModelDefinition {
   variables: Variable[];
-  constants: Constant[];
   expression: string;
   iterationCount: number;
 }
@@ -707,7 +699,6 @@ export interface HistogramBin {
 #[derive(Serialize, Deserialize)]
 pub struct ModelDefinition {
     pub variables: Vec<Variable>,
-    pub constants: Vec<Constant>,
     pub expression: String,
     pub iteration_count: usize,
 }
@@ -724,12 +715,6 @@ pub enum Distribution {
     Normal { mean: f64, std_dev: f64 },
     Lognormal { mean: f64, std_dev: f64 },
     Uniform { min: f64, max: f64 },
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Constant {
-    pub name: String,
-    pub value: f64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -751,9 +736,9 @@ A property is a characteristic or behavior that should hold true across all vali
 
 ### Property 2: Complete Model Serialization
 
-*For any* model state with variables, constants, and expression, serialization should produce a JSON object containing all variables with their complete distribution information, all constants with their values, the expression text, and the iteration count.
+*For any* model state with variables and expression, serialization should produce a JSON object containing all variables with their complete distribution information, the expression text, and the iteration count.
 
-**Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
+**Validates: Requirements 2.1, 2.2, 2.3, 2.4**
 
 ### Property 3: Expression Parsing Correctness
 
@@ -763,7 +748,7 @@ A property is a characteristic or behavior that should hold true across all vali
 
 ### Property 4: Identifier Extraction
 
-*For any* expression containing variable and constant references, the parser should correctly identify all unique identifiers present in the expression.
+*For any* expression containing variable references, the parser should correctly identify all unique identifiers present in the expression.
 
 **Validates: Requirements 3.3**
 
@@ -775,7 +760,7 @@ A property is a characteristic or behavior that should hold true across all vali
 
 ### Property 6: Undefined Identifier Detection
 
-*For any* expression containing identifiers not present in the model's variables or constants, the parser should return an error message listing all undefined identifiers.
+*For any* expression containing identifiers not present in the model's variables, the parser should return an error message listing all undefined identifiers.
 
 **Validates: Requirements 3.5**
 
@@ -793,9 +778,9 @@ A property is a characteristic or behavior that should hold true across all vali
 
 ### Property 9: Expression Evaluation Correctness
 
-*For any* expression and set of variable/constant values, evaluation should produce the mathematically correct result following standard operator precedence (multiplication and division before addition and subtraction).
+*For any* expression and set of variable values, evaluation should produce the mathematically correct result following standard operator precedence (multiplication and division before addition and subtraction).
 
-**Validates: Requirements 5.2, 5.3, 5.4**
+**Validates: Requirements 5.2, 5.3**
 
 ### Property 10: Iteration Count Accuracy
 

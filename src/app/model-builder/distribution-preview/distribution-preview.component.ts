@@ -57,8 +57,7 @@ export class DistributionPreviewComponent {
           font: { size: 11 }
         },
         grid: {
-          color: '#e0e0e0',
-          drawBorder: false
+          display: false
         }
       },
       y: {
@@ -76,8 +75,7 @@ export class DistributionPreviewComponent {
           font: { size: 11 }
         },
         grid: {
-          color: '#e0e0e0',
-          drawBorder: false
+          display: false
         }
       }
     }

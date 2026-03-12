@@ -128,7 +128,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
   
   - [ ] 6.2 Implement single iteration execution
     - Sample all variables
-    - Create value context with variables and constants
+    - Create value context with variables
     - Evaluate expression
     - Store result
     - Handle errors gracefully
@@ -230,10 +230,9 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
   - [ ] 11.2 Implement model serialization
     - Convert ModelState to ModelDefinition
     - Include all variables with distributions
-    - Include all constants with values
     - Include expression text
     - Include iteration count
-    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
   
   - [ ] 11.3 Implement Tauri command invocation
     - Use Tauri invoke API
@@ -251,7 +250,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
   
   - [ ]* 11.5 Write property test for complete model serialization
     - **Property 2: Complete Model Serialization**
-    - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
+    - **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
   
   - [ ]* 11.6 Write property test for pre-simulation validation
     - **Property 17: Pre-Simulation Validation**

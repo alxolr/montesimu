@@ -7,12 +7,12 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 ## Glossary
 
 - **Model_Runner**: The UI component that allows users to execute Monte Carlo simulations
-- **Model_Builder**: The existing UI component for defining simulation models (variables, constants, expressions)
+- **Model_Builder**: The existing UI component for defining simulation models (variables and expressions)
 - **Simulation_Engine**: The Rust backend component that executes Monte Carlo simulations via Tauri
 - **Iteration**: A single execution of the model where each variable is sampled from its distribution and the expression is evaluated
 - **Histogram**: A visual representation showing the frequency distribution of simulation output values
 - **Summary_Statistics**: Calculated metrics including mean, median, standard deviation, minimum, maximum, and percentiles
-- **Model_Definition**: The complete specification of a model including variables with distributions, constants with values, and the expression
+- **Model_Definition**: The complete specification of a model including variables with distributions and the expression
 - **Tauri_Command**: A Rust function exposed to the frontend via Tauri's IPC mechanism
 
 ## Requirements
@@ -40,11 +40,10 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 
 1. WHEN a user starts a simulation, THE Model_Runner SHALL serialize the Model_Definition into a JSON format
 2. WHEN serializing the Model_Definition, THE Model_Runner SHALL include all variables with their names, distribution types, and parameters
-3. WHEN serializing the Model_Definition, THE Model_Runner SHALL include all constants with their names and values
-4. WHEN serializing the Model_Definition, THE Model_Runner SHALL include the expression text
-5. WHEN serializing the Model_Definition, THE Model_Runner SHALL include the iteration count
-6. WHEN the Model_Definition is serialized, THE Model_Runner SHALL invoke a Tauri_Command to send the data to the Simulation_Engine
-7. IF the Tauri_Command invocation fails, THE Model_Runner SHALL display an error message to the user
+3. WHEN serializing the Model_Definition, THE Model_Runner SHALL include the expression text
+4. WHEN serializing the Model_Definition, THE Model_Runner SHALL include the iteration count
+5. WHEN the Model_Definition is serialized, THE Model_Runner SHALL invoke a Tauri_Command to send the data to the Simulation_Engine
+6. IF the Tauri_Command invocation fails, THE Model_Runner SHALL display an error message to the user
 
 ### Requirement 3: Backend Expression Parsing
 
@@ -54,7 +53,7 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 
 1. WHEN the Simulation_Engine receives a Model_Definition, THE Simulation_Engine SHALL parse the expression text into an abstract syntax tree
 2. WHEN parsing the expression, THE Simulation_Engine SHALL support addition (+), subtraction (-), multiplication (*), division (/), and parentheses operators
-3. WHEN parsing the expression, THE Simulation_Engine SHALL identify all variable and constant references
+3. WHEN parsing the expression, THE Simulation_Engine SHALL identify all variable references
 4. IF the expression contains syntax errors, THE Simulation_Engine SHALL return an error message describing the syntax error
 5. IF the expression contains undefined identifiers, THE Simulation_Engine SHALL return an error message listing the undefined identifiers
 6. WHEN the expression is successfully parsed, THE Simulation_Engine SHALL prepare it for evaluation
@@ -80,10 +79,9 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 
 1. WHEN a simulation iteration has sampled all variable values, THE Simulation_Engine SHALL evaluate the parsed expression
 2. WHEN evaluating the expression, THE Simulation_Engine SHALL substitute variable names with their sampled values
-3. WHEN evaluating the expression, THE Simulation_Engine SHALL substitute constant names with their defined values
-4. WHEN evaluating the expression, THE Simulation_Engine SHALL compute the result following standard mathematical operator precedence
-5. WHEN the expression evaluation completes, THE Simulation_Engine SHALL store the result value
-6. IF the expression evaluation encounters an error (e.g., division by zero), THE Simulation_Engine SHALL record the error and continue with the next iteration
+3. WHEN evaluating the expression, THE Simulation_Engine SHALL compute the result following standard mathematical operator precedence
+4. WHEN the expression evaluation completes, THE Simulation_Engine SHALL store the result value
+5. IF the expression evaluation encounters an error (e.g., division by zero), THE Simulation_Engine SHALL record the error and continue with the next iteration
 
 ### Requirement 6: Simulation Execution
 

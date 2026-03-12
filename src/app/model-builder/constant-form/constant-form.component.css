@@ -1,8 +1,0 @@
-.form-field {
-  display: flex;
-  flex-direction: column;
-}
-
-.ng-invalid.ng-touched {
-  border-color: #ef4444;
-}

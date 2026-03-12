@@ -4,10 +4,9 @@
 
 The Monte Carlo Model Builder UI is a standalone Angular component that provides an interface for defining simulation models. The design follows a reactive architecture using Angular signals for state management, ensuring the UI automatically updates when model data changes.
 
-The component is organized into three main sections:
+The component is organized into two main sections:
 1. **Variables Section**: Manages variables with probability distributions
-2. **Constants Section**: Manages constants with fixed numeric values
-3. **Expression Section**: Allows users to write mathematical expressions using defined variables and constants
+2. **Expression Section**: Allows users to write mathematical expressions using defined variables and literal numeric values
 
 The design emphasizes immediate validation feedback, clear visual organization, and adherence to the project's UI/UX guidelines using PrimeNG components and TailwindCSS.
 
@@ -22,17 +21,13 @@ graph TD
     MB[Model Builder Component]
     
     MB --> VL[Variable List]
-    MB --> CL[Constant List]
     MB --> EI[Expression Input]
     
     VL --> VF[Variable Form Dialog]
     VF --> DP[Distribution Preview]
     
-    CL --> CF[Constant Form Dialog]
-    
     MB --> MS[Model Service]
     VL --> MS
-    CL --> MS
     EI --> MS
     
     MS --> EV[Expression Validator]
@@ -58,14 +53,6 @@ model-builder/
 │   ├── distribution-preview.component.ts   # Distribution PDF visualization
 │   ├── distribution-preview.component.html
 │   └── distribution-preview.component.css
-├── constant-list/
-│   ├── constant-list.component.ts      # Constants section
-│   ├── constant-list.component.html
-│   └── constant-list.component.css
-├── constant-form/
-│   ├── constant-form.component.ts      # Add/Edit constant dialog
-│   ├── constant-form.component.html
-│   └── constant-form.component.css
 ├── expression-input/
 │   ├── expression-input.component.ts   # Expression section with validation
 │   ├── expression-input.component.html
@@ -86,18 +73,15 @@ The application uses Angular signals for reactive state management:
 export class ModelService {
   // Core state signals
   private variablesSignal = signal<Variable[]>([]);
-  private constantsSignal = signal<Constant[]>([]);
   private expressionSignal = signal<string>('');
   
   // Computed signals for derived state
   readonly variables = this.variablesSignal.asReadonly();
-  readonly constants = this.constantsSignal.asReadonly();
   readonly expression = this.expressionSignal.asReadonly();
   
-  readonly allIdentifiers = computed(() => [
-    ...this.variables().map(v => v.name),
-    ...this.constants().map(c => c.name)
-  ]);
+  readonly allIdentifiers = computed(() => 
+    this.variables().map(v => v.name)
+  );
 }
 ```
 
@@ -131,10 +115,10 @@ sequenceDiagram
 
 ### ModelBuilderComponent
 
-**Purpose**: Main container component that orchestrates the three sections.
+**Purpose**: Main container component that orchestrates the two sections.
 
 **Responsibilities**:
-- Layout the three sections (variables, constants, expression)
+- Layout the two sections (variables, expression)
 - Inject and provide ModelService to child components
 - Handle overall component lifecycle
 
@@ -143,7 +127,6 @@ sequenceDiagram
 <div class="model-builder-container p-4">
   <p-card header="Monte Carlo Model Builder">
     <app-variable-list />
-    <app-constant-list />
     <app-expression-input />
   </p-card>
 </div>
@@ -300,101 +283,6 @@ sequenceDiagram
 - `isFormValid()`: Returns true if all validation passes
 - `validateName()`: Validates identifier format and uniqueness
 - `validateParameters()`: Validates distribution parameters
-
----
-
-### ConstantListComponent
-
-**Purpose**: Display and manage the list of constants.
-
-**Responsibilities**:
-- Display all defined constants in a list
-- Provide "Add Constant" button
-- Provide "Edit" and "Delete" actions for each constant
-- Open ConstantFormComponent dialog for add/edit operations
-
-**Template Structure**:
-```html
-<div class="constant-section mb-4">
-  <div class="flex items-center justify-between mb-2">
-    <h3>Constants</h3>
-    <p-button label="Add Constant" icon="pi pi-plus" (onClick)="openAddDialog()" />
-  </div>
-  
-  <div *ngIf="constants().length === 0" class="empty-state">
-    <p>No constants defined. Click "Add Constant" to create one.</p>
-  </div>
-  
-  <div *ngFor="let constant of constants()" class="constant-item">
-    <div class="constant-info">
-      <span class="constant-name">{{ constant.name }}</span>
-      <span class="constant-value">{{ constant.value }}</span>
-    </div>
-    <div class="constant-actions">
-      <p-button icon="pi pi-pencil" (onClick)="openEditDialog(constant)" />
-      <p-button icon="pi pi-trash" (onClick)="deleteConstant(constant)" />
-    </div>
-  </div>
-</div>
-```
-
-**Inputs**: None (reads from ModelService)
-
-**Outputs**: None (updates via ModelService)
-
-**Key Methods**:
-- `openAddDialog()`: Opens dialog for creating new constant
-- `openEditDialog(constant: Constant)`: Opens dialog for editing existing constant
-- `deleteConstant(constant: Constant)`: Removes constant from model
-
----
-
-### ConstantFormComponent
-
-**Purpose**: Dialog form for adding or editing a constant.
-
-**Responsibilities**:
-- Display form fields for constant properties
-- Validate input data
-- Submit valid data to ModelService
-
-**Template Structure**:
-```html
-<p-dialog [(visible)]="visible" [header]="isEditMode ? 'Edit Constant' : 'Add Constant'">
-  <form (submit)="onSubmit($event)">
-    <div class="form-field">
-      <label for="name">Name</label>
-      <input pInputText id="name" [(ngModel)]="formData.name" required />
-      <small *ngIf="nameError" class="error">{{ nameError }}</small>
-    </div>
-    
-    <div class="form-field">
-      <label for="value">Value</label>
-      <input pInputText id="value" type="number" [(ngModel)]="formData.value" required />
-      <small *ngIf="valueError" class="error">{{ valueError }}</small>
-    </div>
-    
-    <div class="form-actions">
-      <p-button type="submit" label="Save" [disabled]="!isFormValid()" />
-      <p-button type="button" label="Cancel" (onClick)="onCancel()" />
-    </div>
-  </form>
-</p-dialog>
-```
-
-**Inputs**:
-- `visible: boolean`: Controls dialog visibility
-- `constant?: Constant`: Constant to edit (undefined for add mode)
-
-**Outputs**:
-- `visibleChange: EventEmitter<boolean>`: Emits when dialog closes
-- `save: EventEmitter<Constant>`: Emits when form is submitted with valid data
-
-**Key Methods**:
-- `onSubmit(event: Event)`: Validates and submits form data
-- `isFormValid()`: Returns true if all validation passes
-- `validateName()`: Validates identifier format and uniqueness
-- `validateValue()`: Validates numeric value
 
 ---
 
@@ -570,9 +458,9 @@ export class PDFCalculatorService {
 **Purpose**: Centralized state management for the model builder.
 
 **Responsibilities**:
-- Store and manage variables, constants, and expression
+- Store and manage variables and expression
 - Provide signals for reactive UI updates
-- Provide methods for CRUD operations on variables and constants
+- Provide methods for CRUD operations on variables
 - Coordinate with validation services
 
 **Interface**:
@@ -580,7 +468,6 @@ export class PDFCalculatorService {
 export class ModelService {
   // Read-only signals for components
   readonly variables: Signal<Variable[]>;
-  readonly constants: Signal<Constant[]>;
   readonly expression: Signal<string>;
   readonly allIdentifiers: Signal<string[]>;
   
@@ -589,12 +476,6 @@ export class ModelService {
   updateVariable(oldName: string, variable: Variable): void;
   deleteVariable(name: string): void;
   getVariable(name: string): Variable | undefined;
-  
-  // Constant operations
-  addConstant(constant: Constant): void;
-  updateConstant(oldName: string, constant: Constant): void;
-  deleteConstant(name: string): void;
-  getConstant(name: string): Constant | undefined;
   
   // Expression operations
   setExpression(expression: string): void;
@@ -647,7 +528,7 @@ export class ExpressionValidatorService {
 
 ### IdentifierValidatorService
 
-**Purpose**: Validate identifier names for variables and constants.
+**Purpose**: Validate identifier names for variables.
 
 **Responsibilities**:
 - Check identifier format (alphanumeric only)
@@ -715,23 +596,6 @@ export interface Variable {
 
 ---
 
-### Constant
-
-Represents a model constant with a fixed value.
-
-```typescript
-export interface Constant {
-  name: string;
-  value: number;
-}
-```
-
-**Validation Rules**:
-- `name`: Must be valid identifier (alphanumeric only)
-- `value`: Must be a valid number (can be negative, zero, or positive)
-
----
-
 ### Model State
 
 The complete model state managed by ModelService.
@@ -739,7 +603,6 @@ The complete model state managed by ModelService.
 ```typescript
 export interface ModelState {
   variables: Variable[];
-  constants: Constant[];
   expression: string;
 }
 ```
@@ -755,7 +618,7 @@ A property is a characteristic or behavior that should hold true across all vali
 
 *For any* variable creation attempt, if any required field (name, distribution type, or distribution parameters) is missing or empty, the form submission should be prevented and the variable should not be added to the model.
 
-**Validates: Requirements 1.1, 2.1**
+**Validates: Requirements 1.1**
 
 ### Property 2: Distribution-Specific Parameter Validation
 
@@ -765,105 +628,105 @@ A property is a characteristic or behavior that should hold true across all vali
 
 ### Property 3: Identifier Format Validation
 
-*For any* identifier name (variable or constant), the system should accept it only if it contains exclusively alphanumeric characters, and should reject any name containing spaces, special characters, or being empty.
+*For any* identifier name (variable), the system should accept it only if it contains exclusively alphanumeric characters, and should reject any name containing spaces, special characters, or being empty.
 
-**Validates: Requirements 1.5, 2.2, 5.4**
+**Validates: Requirements 1.5, 4.3**
 
 ### Property 4: Identifier Uniqueness
 
-*For any* new variable or constant name, the system should prevent creation if an identifier with that name already exists (across both variables and constants), and should display an error message indicating the duplicate.
+*For any* new variable name, the system should prevent creation if an identifier with that name already exists, and should display an error message indicating the duplicate.
 
-**Validates: Requirements 1.6, 2.3**
+**Validates: Requirements 1.6**
 
 ### Property 5: Cascading Validation on Edit
 
-*For any* variable or constant that is edited, if that identifier is referenced in the expression, the expression should be automatically re-validated after the edit is saved.
+*For any* variable that is edited, if that identifier is referenced in the expression, the expression should be automatically re-validated after the edit is saved.
 
-**Validates: Requirements 1.7, 2.5**
+**Validates: Requirements 1.7**
 
 ### Property 6: Cascading Invalidation on Deletion
 
-*For any* variable or constant that is deleted, if that identifier is referenced in the expression, the expression should be marked as invalid and should display an error indicating which identifier is undefined.
+*For any* variable that is deleted, if that identifier is referenced in the expression, the expression should be marked as invalid and should display an error indicating which identifier is undefined.
 
-**Validates: Requirements 1.8, 2.6, 3.8**
+**Validates: Requirements 1.8, 2.8**
 
 ### Property 7: Complete List Display
 
-*For any* set of defined variables and constants, all items should appear in their respective list sections with complete information (name, distribution/value, and parameters where applicable).
+*For any* set of defined variables, all items should appear in the list section with complete information (name, distribution, and parameters).
 
-**Validates: Requirements 1.9, 2.7**
+**Validates: Requirements 1.9**
 
 ### Property 8: Numeric Field Validation
 
-*For any* numeric input field (distribution parameters or constant values), the system should accept only valid numeric values and should reject non-numeric strings, displaying an appropriate error message.
+*For any* numeric input field (distribution parameters), the system should accept only valid numeric values and should reject non-numeric strings, displaying an appropriate error message.
 
-**Validates: Requirements 2.4, 5.2, 5.3**
+**Validates: Requirements 4.2**
 
 ### Property 9: Undefined Identifier Detection
 
-*For any* expression containing identifiers, the validator should mark the expression as invalid if any identifier does not correspond to a defined variable or constant, and should list all undefined identifiers in the error message.
+*For any* expression containing identifiers, the validator should mark the expression as invalid if any identifier does not correspond to a defined variable, and should list all undefined identifiers in the error message.
 
-**Validates: Requirements 3.1, 3.4**
+**Validates: Requirements 2.1, 2.4**
 
 ### Property 10: Expression Syntax Validation
 
 *For any* expression, the validator should detect syntax errors (unbalanced parentheses, invalid operator placement, consecutive operators) and should mark the expression as invalid with a descriptive error message.
 
-**Validates: Requirements 3.2, 3.5**
+**Validates: Requirements 2.2, 2.5**
 
 ### Property 11: Operator Support
 
-*For any* expression using the operators +, -, *, /, and parentheses (), the validator should correctly parse and validate the expression without rejecting valid uses of these operators.
+*For any* expression using the operators +, -, *, /, parentheses (), and numeric literals, the validator should correctly parse and validate the expression without rejecting valid uses of these operators.
 
-**Validates: Requirements 3.3**
+**Validates: Requirements 2.3**
 
 ### Property 12: Expression Validation Feedback
 
 *For any* expression, the UI should display visual feedback indicating whether the expression is valid (with a success indicator) or invalid (with specific error messages), and this feedback should update in real-time as the expression changes.
 
-**Validates: Requirements 3.6, 3.7, 4.6**
+**Validates: Requirements 2.6, 2.7, 3.4**
 
 ### Property 13: Inline Error Messages
 
 *For any* invalid input in any form field, an inline error message should appear immediately describing the specific validation failure, and should disappear immediately when the input is corrected.
 
-**Validates: Requirements 5.1, 5.5**
+**Validates: Requirements 4.1, 4.4**
 
 ### Property 14: Form Submission Prevention
 
-*For any* form (variable or constant) containing invalid data, the save/submit button should be disabled or the submission should be prevented, ensuring invalid data cannot be added to the model.
+*For any* form (variable) containing invalid data, the save/submit button should be disabled or the submission should be prevented, ensuring invalid data cannot be added to the model.
 
-**Validates: Requirements 5.6**
+**Validates: Requirements 4.5**
 
 ### Property 15: Distribution Parameter Constraints
 
 *For any* distribution parameter that has domain constraints (e.g., standard deviation must be positive, uniform max must be greater than min), the system should validate these constraints and reject invalid values with descriptive error messages.
 
-**Validates: Requirements 5.7**
+**Validates: Requirements 4.6**
 
 ### Property 16: Normal Distribution Bell Curve Shape
 
 *For any* Normal distribution with valid mean and standard deviation parameters, the generated PDF curve should have a single maximum value at the mean, should be symmetric around the mean, and should decrease monotonically on both sides of the mean.
 
-**Validates: Requirements 8.2**
+**Validates: Requirements 7.2**
 
 ### Property 17: Lognormal Distribution Skewed Shape
 
 *For any* Lognormal distribution with valid mean and standard deviation parameters, the generated PDF curve should only have positive x values, should have a single peak, and should have a longer right tail than left tail (right-skewed).
 
-**Validates: Requirements 8.3**
+**Validates: Requirements 7.3**
 
 ### Property 18: Uniform Distribution Flat Shape
 
 *For any* Uniform distribution with valid min and max parameters, the PDF should be constant (equal to 1/(max-min)) for all x values between min and max, and should be zero for all x values outside that range.
 
-**Validates: Requirements 8.4**
+**Validates: Requirements 7.4**
 
 ### Property 19: Chart Updates on Parameter Change
 
 *For any* distribution parameter change (mean, stdDev, min, or max), the preview chart data should update to reflect the new parameter values, resulting in a different set of PDF points.
 
-**Validates: Requirements 8.5**
+**Validates: Requirements 7.5**
 
 ## Error Handling
 
@@ -874,7 +737,7 @@ The system handles validation errors through immediate, inline feedback:
 1. **Identifier Validation Errors**:
    - Empty name: "Name is required"
    - Invalid characters: "Name must contain only alphanumeric characters"
-   - Duplicate name: "A variable or constant with this name already exists"
+   - Duplicate name: "A variable with this name already exists"
 
 2. **Numeric Validation Errors**:
    - Non-numeric input: "Value must be a valid number"
@@ -896,7 +759,7 @@ All validation errors are recoverable through user correction:
 
 ### Edge Cases
 
-1. **Empty Model State**: When no variables or constants are defined, the expression validator should handle empty identifier lists gracefully
+1. **Empty Model State**: When no variables are defined, the expression validator should handle empty identifier lists gracefully
 2. **Expression with All Identifiers Deleted**: If all identifiers used in an expression are deleted, the expression should show all as undefined
 3. **Rapid State Changes**: Signal-based reactivity ensures UI consistency even with rapid add/edit/delete operations
 4. **Special Numeric Values**: The system should handle edge cases like very large numbers, very small numbers, zero, and negative numbers appropriately
@@ -955,14 +818,13 @@ Unit tests will focus on:
 
 1. **Specific Examples**: Test known good and bad inputs
    - Valid variable creation with each distribution type
-   - Valid constant creation
    - Valid expressions with various operators
    - Known invalid inputs (empty strings, special characters, etc.)
 
 2. **Edge Cases**:
-   - Empty model state (no variables or constants)
-   - Single variable/constant
-   - Maximum reasonable number of variables/constants
+   - Empty model state (no variables)
+   - Single variable
+   - Maximum reasonable number of variables
    - Very long identifier names
    - Very long expressions
    - Expressions with deeply nested parentheses
@@ -1011,8 +873,6 @@ src/app/model-builder/
 │   ├── model-builder.component.spec.ts
 │   ├── variable-list.component.spec.ts
 │   ├── variable-form.component.spec.ts
-│   ├── constant-list.component.spec.ts
-│   ├── constant-form.component.spec.ts
 │   ├── expression-input.component.spec.ts
 │   ├── model.service.spec.ts
 │   ├── expression-validator.service.spec.ts
