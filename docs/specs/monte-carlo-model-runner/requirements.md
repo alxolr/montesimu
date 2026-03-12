@@ -40,10 +40,11 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 
 1. WHEN a user starts a simulation, THE Model_Runner SHALL serialize the Model_Definition into a JSON format
 2. WHEN serializing the Model_Definition, THE Model_Runner SHALL include all variables with their names, distribution types, and parameters
-3. WHEN serializing the Model_Definition, THE Model_Runner SHALL include the expression text
-4. WHEN serializing the Model_Definition, THE Model_Runner SHALL include the iteration count
-5. WHEN the Model_Definition is serialized, THE Model_Runner SHALL invoke a Tauri_Command to send the data to the Simulation_Engine
-6. IF the Tauri_Command invocation fails, THE Model_Runner SHALL display an error message to the user
+3. WHEN serializing the Model_Definition, THE Model_Runner SHALL include an array of intermediate expressions with their names and expression text
+4. WHEN serializing the Model_Definition, THE Model_Runner SHALL include the target expression text
+5. WHEN serializing the Model_Definition, THE Model_Runner SHALL include the iteration count
+6. WHEN the Model_Definition is serialized, THE Model_Runner SHALL invoke a Tauri_Command to send the data to the Simulation_Engine
+7. IF the Tauri_Command invocation fails, THE Model_Runner SHALL display an error message to the user
 
 ### Requirement 3: Backend Expression Parsing
 
@@ -51,12 +52,13 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 
 #### Acceptance Criteria
 
-1. WHEN the Simulation_Engine receives a Model_Definition, THE Simulation_Engine SHALL parse the expression text into an abstract syntax tree
-2. WHEN parsing the expression, THE Simulation_Engine SHALL support addition (+), subtraction (-), multiplication (*), division (/), and parentheses operators
-3. WHEN parsing the expression, THE Simulation_Engine SHALL identify all variable references
-4. IF the expression contains syntax errors, THE Simulation_Engine SHALL return an error message describing the syntax error
-5. IF the expression contains undefined identifiers, THE Simulation_Engine SHALL return an error message listing the undefined identifiers
-6. WHEN the expression is successfully parsed, THE Simulation_Engine SHALL prepare it for evaluation
+1. WHEN the Simulation_Engine receives a Model_Definition, THE Simulation_Engine SHALL parse all intermediate expressions and the target expression into abstract syntax trees
+2. WHEN parsing expressions, THE Simulation_Engine SHALL support addition (+), subtraction (-), multiplication (*), division (/), and parentheses operators
+3. WHEN parsing expressions, THE Simulation_Engine SHALL identify all variable and intermediate expression references
+4. WHEN parsing expressions, THE Simulation_Engine SHALL build a dependency graph showing which expressions reference which variables and other expressions
+5. IF any expression contains syntax errors, THE Simulation_Engine SHALL return an error message describing the syntax error
+6. IF any expression contains undefined identifiers, THE Simulation_Engine SHALL return an error message listing the undefined identifiers
+7. WHEN all expressions are successfully parsed, THE Simulation_Engine SHALL prepare them for evaluation in dependency order
 
 ### Requirement 4: Distribution Sampling
 
@@ -77,11 +79,12 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 
 #### Acceptance Criteria
 
-1. WHEN a simulation iteration has sampled all variable values, THE Simulation_Engine SHALL evaluate the parsed expression
-2. WHEN evaluating the expression, THE Simulation_Engine SHALL substitute variable names with their sampled values
-3. WHEN evaluating the expression, THE Simulation_Engine SHALL compute the result following standard mathematical operator precedence
-4. WHEN the expression evaluation completes, THE Simulation_Engine SHALL store the result value
-5. IF the expression evaluation encounters an error (e.g., division by zero), THE Simulation_Engine SHALL record the error and continue with the next iteration
+1. WHEN a simulation iteration has sampled all variable values, THE Simulation_Engine SHALL evaluate expressions in dependency order (topological sort)
+2. WHEN evaluating intermediate expressions, THE Simulation_Engine SHALL substitute variable names and previously evaluated expression names with their values
+3. WHEN evaluating the target expression, THE Simulation_Engine SHALL substitute variable names and intermediate expression names with their values
+4. WHEN evaluating expressions, THE Simulation_Engine SHALL compute results following standard mathematical operator precedence
+5. WHEN the target expression evaluation completes, THE Simulation_Engine SHALL store only the target expression result value
+6. IF any expression evaluation encounters an error (e.g., division by zero), THE Simulation_Engine SHALL record the error and continue with the next iteration
 
 ### Requirement 6: Simulation Execution
 
@@ -145,13 +148,14 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 
 #### Acceptance Criteria
 
-1. IF the expression contains syntax errors, THE Model_Runner SHALL prevent simulation execution and display an error message
+1. IF any expression contains syntax errors, THE Model_Runner SHALL prevent simulation execution and display an error message
 2. IF the model has no variables defined, THE Model_Runner SHALL prevent simulation execution and display an error message
-3. IF the expression is empty or invalid, THE Model_Runner SHALL prevent simulation execution and display an error message
-4. IF the Simulation_Engine returns an error, THE Model_Runner SHALL display a user-friendly error message describing the failure
-5. IF the Tauri communication fails, THE Model_Runner SHALL display an error message indicating a backend communication error
-6. WHEN displaying error messages, THE Model_Runner SHALL use a visually distinct error indicator (icon and color)
-7. WHEN an error occurs, THE Model_Runner SHALL allow the user to dismiss the error and return to the configuration dialog
+3. IF the target expression is empty or invalid, THE Model_Runner SHALL prevent simulation execution and display an error message
+4. IF the expressions contain circular references, THE Simulation_Engine SHALL return an error message describing the circular dependency
+5. IF the Simulation_Engine returns an error, THE Model_Runner SHALL display a user-friendly error message describing the failure
+6. IF the Tauri communication fails, THE Model_Runner SHALL display an error message indicating a backend communication error
+7. WHEN displaying error messages, THE Model_Runner SHALL use a visually distinct error indicator (icon and color)
+8. WHEN an error occurs, THE Model_Runner SHALL allow the user to dismiss the error and return to the configuration dialog
 
 ### Requirement 11: Results Export
 
@@ -174,7 +178,7 @@ The Monte Carlo Model Runner is a feature that enables users to execute Monte Ca
 #### Acceptance Criteria
 
 1. THE Model_Runner SHALL be accessible from the Model_Builder component
-2. THE Model_Runner SHALL read the current model state from the Model_Builder's ModelService
+2. THE Model_Runner SHALL read the current model state including variables, intermediate expressions, and target expression from the Model_Builder's ModelService
 3. WHEN the model state changes in the Model_Builder, THE Model_Runner SHALL reflect those changes immediately
-4. WHEN the "Run Simulation" button is disabled, THE Model_Runner SHALL display a tooltip explaining why (e.g., "Define at least one variable and a valid expression")
+4. WHEN the "Run Simulation" button is disabled, THE Model_Runner SHALL display a tooltip explaining why (e.g., "Define at least one variable and a valid target expression")
 5. THE Model_Runner SHALL follow the same UI/UX guidelines as the Model_Builder (PrimeNG components, TailwindCSS styling)

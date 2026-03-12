@@ -33,39 +33,60 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
     - Detect unbalanced parentheses
     - Detect invalid operator placement
     - Return descriptive error messages
-    - _Requirements: 3.4_
+    - _Requirements: 3.5_
   
   - [ ] 2.5 Implement identifier extraction
     - Extract all unique identifiers from AST
-    - Return list of variable/constant references
+    - Return list of variable/expression references
     - _Requirements: 3.3_
   
-  - [ ]* 2.6 Write property test for expression parsing
+  - [ ] 2.6 Implement dependency graph builder
+    - Build graph showing which expressions reference which identifiers
+    - Support both variable and intermediate expression references
+    - _Requirements: 3.4_
+  
+  - [ ] 2.7 Implement topological sort for evaluation order
+    - Perform topological sort on dependency graph
+    - Return evaluation order for expressions
+    - Detect circular references
+    - Return error for circular dependencies
+    - _Requirements: 3.4, 3.7_
+  
+  - [ ]* 2.8 Write property test for expression parsing
     - **Property 3: Expression Parsing Correctness**
     - **Validates: Requirements 3.1, 3.2**
   
-  - [ ]* 2.7 Write property test for syntax error detection
+  - [ ]* 2.9 Write property test for syntax error detection
     - **Property 5: Syntax Error Detection**
-    - **Validates: Requirements 3.4**
+    - **Validates: Requirements 3.5**
   
-  - [ ]* 2.8 Write property test for identifier extraction
+  - [ ]* 2.10 Write property test for identifier extraction
     - **Property 4: Identifier Extraction**
     - **Validates: Requirements 3.3**
   
-  - [ ]* 2.9 Write unit tests for parser edge cases
+  - [ ]* 2.11 Write property test for evaluation order correctness
+    - **Property 19: Evaluation Order Correctness**
+    - **Validates: Requirements 3.4, 3.7, 5.1**
+  
+  - [ ]* 2.12 Write property test for circular reference detection
+    - **Property 20: Circular Reference Detection**
+    - **Validates: Requirements 3.4, 10.4**
+  
+  - [ ]* 2.13 Write unit tests for parser edge cases
     - Test deeply nested parentheses
     - Test expressions with only numbers
     - Test expressions with only identifiers
 
 - [ ] 3. Implement expression evaluator in Rust
   - [ ] 3.1 Create evaluator with value context
-    - Store variable and constant values in HashMap
+    - Store variable and intermediate expression values in HashMap
     - Implement evaluation method
+    - Implement method to add values dynamically
     - _Requirements: 5.1, 5.2, 5.3_
   
   - [ ] 3.2 Implement AST traversal and evaluation
     - Evaluate number nodes
-    - Substitute identifier nodes with values
+    - Substitute identifier nodes with values (variables or expressions)
     - Evaluate binary operations with correct precedence
     - _Requirements: 5.4_
   
@@ -83,6 +104,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
     - Test division by zero
     - Test overflow/underflow
     - Test very large expressions
+    - Test evaluation with intermediate expression references
 
 - [ ] 4. Implement distribution sampler in Rust
   - [ ] 4.1 Create sampler with RNG
@@ -122,21 +144,23 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
 
 - [ ] 6. Implement simulation engine in Rust
   - [ ] 6.1 Create SimulationEngine struct
-    - Store model definition (variables, constants, expression)
+    - Store model definition (variables, intermediate expressions, target expression)
     - Store iteration count
     - _Requirements: 6.1_
   
   - [ ] 6.2 Implement single iteration execution
     - Sample all variables
     - Create value context with variables
-    - Evaluate expression
-    - Store result
+    - Evaluate intermediate expressions in dependency order
+    - Add intermediate expression results to context
+    - Evaluate target expression
+    - Store only target expression result
     - Handle errors gracefully
-    - _Requirements: 4.6, 5.1, 5.5, 5.6_
+    - _Requirements: 4.6, 5.1, 5.2, 5.3, 5.5, 5.6_
   
   - [ ] 6.3 Implement full simulation execution
     - Execute specified number of iterations
-    - Collect all results
+    - Collect all target expression results
     - Collect error information
     - Return SimulationResults
     - _Requirements: 6.1, 6.3, 6.4, 6.5_
@@ -155,17 +179,22 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
   
   - [ ]* 6.7 Write unit tests for simulation engine
     - Test simulation with known model
+    - Test simulation with intermediate expressions
     - Test simulation with errors
     - Test empty model handling
 
 - [ ] 7. Implement Tauri command handler
   - [ ] 7.1 Create run_simulation Tauri command
-    - Accept ModelDefinition parameter
-    - Parse expression
-    - Create and run simulation engine
+    - Accept ModelDefinition parameter with intermediate expressions and target expression
+    - Parse all intermediate expressions
+    - Parse target expression
+    - Build dependency graph
+    - Perform topological sort for evaluation order
+    - Detect circular references
+    - Create and run simulation engine with evaluation order
     - Return SimulationResults
     - Handle all errors and return error messages
-    - _Requirements: 2.6, 3.1, 6.6_
+    - _Requirements: 2.6, 2.7, 3.1, 3.4, 3.7, 6.6, 10.4_
   
   - [ ] 7.2 Register command in Tauri app
     - Add command to Tauri builder
@@ -173,7 +202,8 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
     - _Requirements: 2.6_
   
   - [ ]* 7.3 Write integration tests for Tauri command
-    - Test successful simulation
+    - Test successful simulation with intermediate expressions
+    - Test circular reference detection
     - Test error cases
     - Test serialization/deserialization
 
@@ -230,16 +260,17 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
   - [ ] 11.2 Implement model serialization
     - Convert ModelState to ModelDefinition
     - Include all variables with distributions
-    - Include expression text
+    - Include all intermediate expressions with names and expression text
+    - Include target expression text
     - Include iteration count
-    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
   
   - [ ] 11.3 Implement Tauri command invocation
     - Use Tauri invoke API
     - Handle async execution
     - Update signals during execution
-    - Handle errors from backend
-    - _Requirements: 2.6, 2.7_
+    - Handle errors from backend (including circular reference errors)
+    - _Requirements: 2.6, 2.7, 10.4_
   
   - [ ] 11.4 Implement runSimulation method
     - Validate model before running
@@ -250,7 +281,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
   
   - [ ]* 11.5 Write property test for complete model serialization
     - **Property 2: Complete Model Serialization**
-    - **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
+    - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
   
   - [ ]* 11.6 Write property test for pre-simulation validation
     - **Property 17: Pre-Simulation Validation**
@@ -344,7 +375,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
   - [ ] 15.2 Implement simulation readiness check
     - Inject ModelService
     - Check for at least one variable
-    - Check for valid expression
+    - Check for valid target expression
     - Enable/disable button accordingly
     - Provide tooltip explaining disabled state
     - _Requirements: 1.1, 12.4_
@@ -355,8 +386,8 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
     - Start simulation with selected configuration
     - Display loading indicator during execution
     - Display results when complete
-    - Handle errors
-    - _Requirements: 1.2, 6.1, 7.1, 7.4, 7.5, 7.6, 10.4, 10.5, 10.7_
+    - Handle errors (including circular reference errors)
+    - _Requirements: 1.2, 6.1, 7.1, 7.4, 7.5, 7.6, 10.4, 10.5, 10.7, 10.8_
   
   - [ ]* 15.4 Write property test for model state reactivity
     - **Property 18: Model State Reactivity**

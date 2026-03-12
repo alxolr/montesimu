@@ -349,10 +349,16 @@ export interface SimulationConfig {
   iterationCount: number;
 }
 
+export interface IntermediateExpression {
+  name: string;
+  expression: string;
+}
+
 export interface ModelDefinition {
   variables: Variable[];
   constants: Constant[];
-  expression: string;
+  intermediateExpressions: IntermediateExpression[];
+  targetExpression: string;
   iterationCount: number;
 }
 
@@ -495,12 +501,20 @@ Max,58.7
 ```rust
 #[tauri::command]
 async fn run_simulation(model: ModelDefinition) -> Result<SimulationResults, String> {
-    // Parse expression
-    let ast = parse_expression(&model.expression)?;
+    // Parse all expressions
+    let mut parsed_exprs = HashMap::new();
+    for expr in &model.intermediate_expressions {
+        let ast = parse_expression(&expr.expression)?;
+        parsed_exprs.insert(expr.name.clone(), ast);
+    }
+    let target_ast = parse_expression(&model.target_expression)?;
+    
+    // Build dependency graph and check for circular references
+    let eval_order = build_evaluation_order(&parsed_exprs, &target_ast)?;
     
     // Run simulation
     let engine = SimulationEngine::new(model);
-    let results = engine.run(ast)?;
+    let results = engine.run(parsed_exprs, target_ast, eval_order)?;
     
     Ok(results)
 }
@@ -528,9 +542,19 @@ pub struct SimulationEngine {
 impl SimulationEngine {
     pub fn new(model: ModelDefinition) -> Self;
     
-    pub fn run(&self, ast: Expr) -> Result<SimulationResults, String>;
+    pub fn run(
+        &self,
+        intermediate_exprs: HashMap<String, Expr>,
+        target_expr: Expr,
+        eval_order: Vec<String>
+    ) -> Result<SimulationResults, String>;
     
-    fn run_iteration(&self, ast: &Expr) -> Result<f64, String>;
+    fn run_iteration(
+        &self,
+        intermediate_exprs: &HashMap<String, Expr>,
+        target_expr: &Expr,
+        eval_order: &[String]
+    ) -> Result<f64, String>;
 }
 ```
 
@@ -567,6 +591,18 @@ pub enum Operator {
 }
 
 pub fn parse_expression(input: &str) -> Result<Expr, String>;
+
+pub fn extract_identifiers(expr: &Expr) -> HashSet<String>;
+
+pub fn build_dependency_graph(
+    intermediate_exprs: &HashMap<String, Expr>,
+    target_expr: &Expr
+) -> HashMap<String, HashSet<String>>;
+
+pub fn build_evaluation_order(
+    intermediate_exprs: &HashMap<String, Expr>,
+    target_expr: &Expr
+) -> Result<Vec<String>, String>;
 ```
 
 **Parsing Strategy**:
@@ -596,6 +632,8 @@ pub struct Evaluator {
 
 impl Evaluator {
     pub fn new(values: HashMap<String, f64>) -> Self;
+    
+    pub fn add_value(&mut self, name: String, value: f64);
     
     pub fn evaluate(&self, expr: &Expr) -> Result<f64, String>;
     
@@ -656,6 +694,12 @@ export interface Variable {
 
 export interface ModelState {
   variables: Variable[];
+  intermediateExpressions: IntermediateExpression[];
+  targetExpression: string;
+}
+
+export interface IntermediateExpression {
+  name: string;
   expression: string;
 }
 
@@ -666,7 +710,8 @@ export interface SimulationConfig {
 
 export interface ModelDefinition {
   variables: Variable[];
-  expression: string;
+  intermediateExpressions: IntermediateExpression[];
+  targetExpression: string;
   iterationCount: number;
 }
 
@@ -699,8 +744,15 @@ export interface HistogramBin {
 #[derive(Serialize, Deserialize)]
 pub struct ModelDefinition {
     pub variables: Vec<Variable>,
-    pub expression: String,
+    pub intermediate_expressions: Vec<IntermediateExpression>,
+    pub target_expression: String,
     pub iteration_count: usize,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct IntermediateExpression {
+    pub name: String,
+    pub expression: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -736,9 +788,9 @@ A property is a characteristic or behavior that should hold true across all vali
 
 ### Property 2: Complete Model Serialization
 
-*For any* model state with variables and expression, serialization should produce a JSON object containing all variables with their complete distribution information, the expression text, and the iteration count.
+*For any* model state with variables, intermediate expressions, target expression, serialization should produce a JSON object containing all variables with their complete distribution information, all intermediate expressions with names and expression text, the target expression text, and the iteration count.
 
-**Validates: Requirements 2.1, 2.2, 2.3, 2.4**
+**Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
 
 ### Property 3: Expression Parsing Correctness
 
@@ -748,7 +800,7 @@ A property is a characteristic or behavior that should hold true across all vali
 
 ### Property 4: Identifier Extraction
 
-*For any* expression containing variable references, the parser should correctly identify all unique identifiers present in the expression.
+*For any* expression containing variable or intermediate expression references, the parser should correctly identify all unique identifiers present in the expression.
 
 **Validates: Requirements 3.3**
 
@@ -778,9 +830,9 @@ A property is a characteristic or behavior that should hold true across all vali
 
 ### Property 9: Expression Evaluation Correctness
 
-*For any* expression and set of variable values, evaluation should produce the mathematically correct result following standard operator precedence (multiplication and division before addition and subtraction).
+*For any* expression and set of variable and intermediate expression values, evaluation should produce the mathematically correct result following standard operator precedence (multiplication and division before addition and subtraction).
 
-**Validates: Requirements 5.2, 5.3**
+**Validates: Requirements 5.2, 5.3, 5.4**
 
 ### Property 10: Iteration Count Accuracy
 
@@ -835,6 +887,18 @@ A property is a characteristic or behavior that should hold true across all vali
 *For any* change to the model state in the Model Builder, the Model Runner should immediately reflect those changes in its ability to run simulations and in the data it sends to the backend.
 
 **Validates: Requirements 12.2, 12.3**
+
+### Property 19: Evaluation Order Correctness
+
+*For any* set of intermediate expressions and target expression, the evaluation order should respect all dependencies such that each expression is evaluated only after all expressions it references have been evaluated.
+
+**Validates: Requirements 3.4, 3.7, 5.1**
+
+### Property 20: Circular Reference Detection
+
+*For any* set of intermediate expressions containing circular references (A depends on B, B depends on A), the system should detect the circular dependency and return an error before attempting evaluation.
+
+**Validates: Requirements 3.4, 10.4**
 
 ## Error Handling
 

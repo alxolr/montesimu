@@ -4,11 +4,12 @@
 
 The Monte Carlo Model Builder UI is a standalone Angular component that provides an interface for defining simulation models. The design follows a reactive architecture using Angular signals for state management, ensuring the UI automatically updates when model data changes.
 
-The component is organized into two main sections:
+The component is organized into three main sections:
 1. **Variables Section**: Manages variables with probability distributions
-2. **Expression Section**: Allows users to write mathematical expressions using defined variables and literal numeric values
+2. **Intermediate Expressions Section**: Manages named expressions that can reference variables and other intermediate expressions
+3. **Target Expression Section**: Defines the final expression that produces the model output
 
-The design emphasizes immediate validation feedback, clear visual organization, and adherence to the project's UI/UX guidelines using PrimeNG components and TailwindCSS.
+The design emphasizes immediate validation feedback, circular reference detection, dependency graph construction, clear visual organization, and adherence to the project's UI/UX guidelines using PrimeNG components and TailwindCSS.
 
 ## Architecture
 
@@ -21,17 +22,22 @@ graph TD
     MB[Model Builder Component]
     
     MB --> VL[Variable List]
-    MB --> EI[Expression Input]
+    MB --> IEL[Intermediate Expression List]
+    MB --> TEI[Target Expression Input]
     
     VL --> VF[Variable Form Dialog]
     VF --> DP[Distribution Preview]
     
+    IEL --> IEF[Intermediate Expression Form Dialog]
+    
     MB --> MS[Model Service]
     VL --> MS
-    EI --> MS
+    IEL --> MS
+    TEI --> MS
     
     MS --> EV[Expression Validator]
     MS --> IV[Identifier Validator]
+    MS --> DG[Dependency Graph Service]
     DP --> PC[PDF Calculator]
 ```
 
@@ -53,14 +59,23 @@ model-builder/
 │   ├── distribution-preview.component.ts   # Distribution PDF visualization
 │   ├── distribution-preview.component.html
 │   └── distribution-preview.component.css
-├── expression-input/
-│   ├── expression-input.component.ts   # Expression section with validation
-│   ├── expression-input.component.html
-│   └── expression-input.component.css
+├── intermediate-expression-list/
+│   ├── intermediate-expression-list.component.ts   # Intermediate expressions section
+│   ├── intermediate-expression-list.component.html
+│   └── intermediate-expression-list.component.css
+├── intermediate-expression-form/
+│   ├── intermediate-expression-form.component.ts   # Add/Edit intermediate expression dialog
+│   ├── intermediate-expression-form.component.html
+│   └── intermediate-expression-form.component.css
+├── target-expression-input/
+│   ├── target-expression-input.component.ts   # Target expression section with validation
+│   ├── target-expression-input.component.html
+│   └── target-expression-input.component.css
 └── services/
     ├── model.service.ts                # State management service
     ├── expression-validator.service.ts # Expression validation logic
     ├── identifier-validator.service.ts # Identifier validation logic
+    ├── dependency-graph.service.ts     # Dependency graph and circular reference detection
     └── pdf-calculator.service.ts       # Probability density function calculations
 ```
 
@@ -73,14 +88,24 @@ The application uses Angular signals for reactive state management:
 export class ModelService {
   // Core state signals
   private variablesSignal = signal<Variable[]>([]);
-  private expressionSignal = signal<string>('');
+  private intermediateExpressionsSignal = signal<IntermediateExpression[]>([]);
+  private targetExpressionSignal = signal<string>('');
   
   // Computed signals for derived state
   readonly variables = this.variablesSignal.asReadonly();
-  readonly expression = this.expressionSignal.asReadonly();
+  readonly intermediateExpressions = this.intermediateExpressionsSignal.asReadonly();
+  readonly targetExpression = this.targetExpressionSignal.asReadonly();
   
-  readonly allIdentifiers = computed(() => 
-    this.variables().map(v => v.name)
+  readonly allIdentifiers = computed(() => [
+    ...this.variables().map(v => v.name),
+    ...this.intermediateExpressions().map(e => e.name)
+  ]);
+  
+  readonly evaluationOrder = computed(() => 
+    this.dependencyGraphService.getEvaluationOrder(
+      this.intermediateExpressions(),
+      this.targetExpression()
+    )
   );
 }
 ```
@@ -115,10 +140,10 @@ sequenceDiagram
 
 ### ModelBuilderComponent
 
-**Purpose**: Main container component that orchestrates the two sections.
+**Purpose**: Main container component that orchestrates the three sections.
 
 **Responsibilities**:
-- Layout the two sections (variables, expression)
+- Layout the three sections (variables, intermediate expressions, target expression)
 - Inject and provide ModelService to child components
 - Handle overall component lifecycle
 
@@ -127,7 +152,8 @@ sequenceDiagram
 <div class="model-builder-container p-4">
   <p-card header="Monte Carlo Model Builder">
     <app-variable-list />
-    <app-expression-input />
+    <app-intermediate-expression-list />
+    <app-target-expression-input />
   </p-card>
 </div>
 ```
@@ -286,29 +312,142 @@ sequenceDiagram
 
 ---
 
-### ExpressionInputComponent
+### IntermediateExpressionListComponent
 
-**Purpose**: Provide text input for mathematical expressions with real-time validation.
+**Purpose**: Display and manage the list of intermediate expressions.
 
 **Responsibilities**:
-- Display text input for expression
-- Validate expression in real-time as user types
-- Display validation status (valid/invalid)
-- Display specific error messages for invalid expressions
+- Display all defined intermediate expressions in a list
+- Provide "Add Intermediate Expression" button
+- Provide "Edit" and "Delete" actions for each intermediate expression
+- Open IntermediateExpressionFormComponent dialog for add/edit operations
+- Show dependencies for each expression
 
 **Template Structure**:
 ```html
-<div class="expression-section mb-4">
-  <h3>Model Expression</h3>
+<div class="intermediate-expression-section mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <h3>Intermediate Expressions</h3>
+    <p-button label="Add Expression" icon="pi pi-plus" (onClick)="openAddDialog()" />
+  </div>
+  
+  <div *ngIf="intermediateExpressions().length === 0" class="empty-state">
+    <p>No intermediate expressions defined. Click "Add Expression" to create one.</p>
+  </div>
+  
+  <div *ngFor="let expr of intermediateExpressions()" class="expression-item">
+    <div class="expression-info">
+      <span class="expression-name">{{ expr.name }}</span>
+      <span class="expression-formula">{{ expr.formula }}</span>
+      <span class="expression-dependencies" *ngIf="getDependencies(expr).length > 0">
+        Depends on: {{ getDependencies(expr).join(', ') }}
+      </span>
+    </div>
+    <div class="expression-actions">
+      <p-button icon="pi pi-pencil" (onClick)="openEditDialog(expr)" />
+      <p-button icon="pi pi-trash" (onClick)="deleteExpression(expr)" />
+    </div>
+  </div>
+</div>
+```
+
+**Inputs**: None (reads from ModelService)
+
+**Outputs**: None (updates via ModelService)
+
+**Key Methods**:
+- `openAddDialog()`: Opens dialog for creating new intermediate expression
+- `openEditDialog(expr: IntermediateExpression)`: Opens dialog for editing existing expression
+- `deleteExpression(expr: IntermediateExpression)`: Attempts to remove expression, checks for dependencies first
+- `getDependencies(expr: IntermediateExpression)`: Returns list of identifiers the expression depends on
+
+---
+
+### IntermediateExpressionFormComponent
+
+**Purpose**: Dialog form for adding or editing an intermediate expression.
+
+**Responsibilities**:
+- Display form fields for expression name and formula
+- Validate input data
+- Check for circular references
+- Display real-time validation feedback
+- Submit valid data to ModelService
+
+**Template Structure**:
+```html
+<p-dialog [(visible)]="visible" [header]="isEditMode ? 'Edit Intermediate Expression' : 'Add Intermediate Expression'" [style]="{width: '600px'}">
+  <form (submit)="onSubmit($event)">
+    <div class="form-field">
+      <label for="name">Name</label>
+      <input pInputText id="name" [(ngModel)]="formData.name" required />
+      <small *ngIf="nameError" class="error">{{ nameError }}</small>
+    </div>
+    
+    <div class="form-field">
+      <label for="formula">Formula</label>
+      <input pInputText id="formula" [(ngModel)]="formData.formula" required />
+      <small *ngIf="formulaError" class="error">{{ formulaError }}</small>
+    </div>
+    
+    <div class="available-identifiers">
+      <h4>Available Identifiers</h4>
+      <div class="identifier-list">
+        <span *ngFor="let id of availableIdentifiers()" class="identifier-badge">
+          {{ id }}
+        </span>
+      </div>
+    </div>
+    
+    <div class="form-actions">
+      <p-button type="submit" label="Save" [disabled]="!isFormValid()" />
+      <p-button type="button" label="Cancel" (onClick)="onCancel()" />
+    </div>
+  </form>
+</p-dialog>
+```
+
+**Inputs**:
+- `visible: boolean`: Controls dialog visibility
+- `expression?: IntermediateExpression`: Expression to edit (undefined for add mode)
+
+**Outputs**:
+- `visibleChange: EventEmitter<boolean>`: Emits when dialog closes
+- `save: EventEmitter<IntermediateExpression>`: Emits when form is submitted with valid data
+
+**Key Methods**:
+- `onSubmit(event: Event)`: Validates and submits form data
+- `isFormValid()`: Returns true if all validation passes (name, formula, no circular references)
+- `validateName()`: Validates identifier format and uniqueness across variables and expressions
+- `validateFormula()`: Validates formula syntax and identifier references
+- `checkCircularReference()`: Checks if the expression would create a circular reference
+
+---
+
+### TargetExpressionInputComponent
+
+**Purpose**: Provide text input for the target expression with real-time validation.
+
+**Responsibilities**:
+- Display text input for target expression
+- Validate expression in real-time as user types
+- Display validation status (valid/invalid)
+- Display specific error messages for invalid expressions
+- Show dependencies
+
+**Template Structure**:
+```html
+<div class="target-expression-section mb-4">
+  <h3>Target Expression</h3>
   
   <div class="form-field">
-    <label for="expression">Expression</label>
+    <label for="targetExpression">Formula</label>
     <input 
       pInputText 
-      id="expression" 
+      id="targetExpression" 
       [(ngModel)]="expressionText"
       (ngModelChange)="onExpressionChange($event)"
-      placeholder="e.g., (var1 + var2) * const1"
+      placeholder="e.g., (var1 + expr1) * 2"
       [class.invalid]="!validationResult().isValid"
     />
     
@@ -333,6 +472,11 @@ sequenceDiagram
       </span>
     </div>
   </div>
+  
+  <div class="dependencies" *ngIf="dependencies().length > 0">
+    <h4>Dependencies</h4>
+    <p>This expression depends on: {{ dependencies().join(', ') }}</p>
+  </div>
 </div>
 ```
 
@@ -341,13 +485,129 @@ sequenceDiagram
 **Outputs**: None (updates via ModelService)
 
 **Key Methods**:
-- `onExpressionChange(value: string)`: Updates expression in ModelService and triggers validation
+- `onExpressionChange(value: string)`: Updates target expression in ModelService and triggers validation
 - `validationResult()`: Computed signal returning validation status and errors
 - `availableIdentifiers()`: Computed signal returning list of all defined identifiers
+- `dependencies()`: Computed signal returning list of identifiers the target expression depends on
 
 ---
 
-### DistributionPreviewComponent
+### ExpressionInputComponent
+
+**Note**: This component is replaced by IntermediateExpressionListComponent and TargetExpressionInputComponent in the nested expressions design. The original ExpressionInputComponent is no longer used.
+
+---
+
+### DependencyGraphService
+
+**Purpose**: Build dependency graphs, detect circular references, and determine evaluation order.
+
+**Responsibilities**:
+- Build a directed graph of expression dependencies
+- Detect circular references using cycle detection algorithms
+- Perform topological sorting to determine evaluation order
+- Provide detailed error messages for circular references
+
+**Interface**:
+```typescript
+export interface DependencyNode {
+  name: string;
+  dependencies: string[];
+}
+
+export interface CircularReferenceError {
+  detected: boolean;
+  cycle?: string[]; // The cycle path, e.g., ['A', 'B', 'C', 'A']
+  message?: string; // Human-readable error message
+}
+
+export class DependencyGraphService {
+  // Build dependency graph from expressions
+  buildGraph(
+    intermediateExpressions: IntermediateExpression[],
+    targetExpression: string,
+    validIdentifiers: string[]
+  ): Map<string, DependencyNode>;
+  
+  // Detect circular references
+  detectCircularReference(
+    graph: Map<string, DependencyNode>
+  ): CircularReferenceError;
+  
+  // Get evaluation order using topological sort
+  getEvaluationOrder(
+    intermediateExpressions: IntermediateExpression[],
+    targetExpression: string
+  ): string[];
+  
+  // Extract identifiers from a formula
+  extractIdentifiers(formula: string): string[];
+  
+  // Check if adding/updating an expression would create a cycle
+  wouldCreateCycle(
+    expressionName: string,
+    formula: string,
+    existingExpressions: IntermediateExpression[]
+  ): CircularReferenceError;
+}
+```
+
+**Circular Reference Detection Algorithm**:
+1. Use Depth-First Search (DFS) with a recursion stack
+2. Track visited nodes and nodes in current path
+3. If a node in the current path is visited again, a cycle exists
+4. Reconstruct the cycle path for error reporting
+
+**Topological Sort Algorithm**:
+1. Calculate in-degree for each node (number of incoming edges)
+2. Start with nodes that have in-degree 0 (no dependencies)
+3. Process nodes in order, reducing in-degree of dependent nodes
+4. If all nodes are processed, return the order; otherwise, a cycle exists
+
+**Error Message Format**:
+- Direct cycle: "Circular reference detected: A → A"
+- Indirect cycle: "Circular reference detected: A → B → C → A"
+
+---
+
+### ExpressionValidatorService
+
+**Purpose**: Validate mathematical expressions.
+
+**Responsibilities**:
+- Parse expression syntax
+- Check for undefined identifiers
+- Detect syntax errors
+- Return detailed validation results
+
+**Interface**:
+```typescript
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+export class ExpressionValidatorService {
+  validate(expression: string, validIdentifiers: string[]): ValidationResult;
+  
+  private checkSyntax(expression: string): string[];
+  private checkIdentifiers(expression: string, validIdentifiers: string[]): string[];
+  private extractIdentifiers(expression: string): string[];
+}
+```
+
+**Validation Logic**:
+1. **Syntax Validation**: Check for balanced parentheses, valid operators, proper operator placement
+2. **Identifier Validation**: Extract all identifiers from expression and verify each exists in validIdentifiers
+3. **Error Reporting**: Return specific, actionable error messages
+
+**Expression Parsing Strategy**:
+- Use regular expressions to extract identifiers (sequences of alphanumeric characters)
+- Validate operator placement (no consecutive operators, operators not at start/end)
+- Check parentheses balance using stack-based algorithm
+- Support operators: `+`, `-`, `*`, `/`, `(`, `)`
+
+---
 
 **Purpose**: Display a real-time visualization of the probability density function for a distribution.
 
@@ -458,18 +718,21 @@ export class PDFCalculatorService {
 **Purpose**: Centralized state management for the model builder.
 
 **Responsibilities**:
-- Store and manage variables and expression
+- Store and manage variables, intermediate expressions, and target expression
 - Provide signals for reactive UI updates
-- Provide methods for CRUD operations on variables
-- Coordinate with validation services
+- Provide methods for CRUD operations on variables and intermediate expressions
+- Coordinate with validation and dependency graph services
+- Enforce uniqueness constraints across all identifiers
 
 **Interface**:
 ```typescript
 export class ModelService {
   // Read-only signals for components
   readonly variables: Signal<Variable[]>;
-  readonly expression: Signal<string>;
+  readonly intermediateExpressions: Signal<IntermediateExpression[]>;
+  readonly targetExpression: Signal<string>;
   readonly allIdentifiers: Signal<string[]>;
+  readonly evaluationOrder: Signal<string[]>;
   
   // Variable operations
   addVariable(variable: Variable): void;
@@ -477,54 +740,32 @@ export class ModelService {
   deleteVariable(name: string): void;
   getVariable(name: string): Variable | undefined;
   
-  // Expression operations
-  setExpression(expression: string): void;
+  // Intermediate expression operations
+  addIntermediateExpression(expression: IntermediateExpression): Result<void, string>;
+  updateIntermediateExpression(oldName: string, expression: IntermediateExpression): Result<void, string>;
+  deleteIntermediateExpression(name: string): Result<void, string>;
+  getIntermediateExpression(name: string): IntermediateExpression | undefined;
+  
+  // Target expression operations
+  setTargetExpression(expression: string): void;
   
   // Validation helpers
   isIdentifierUnique(name: string, excludeName?: string): boolean;
+  getDependencies(formula: string): string[];
+  getExpressionsReferencingIdentifier(identifier: string): string[];
 }
 ```
+
+**Result Type**:
+```typescript
+type Result<T, E> = { success: true; value: T } | { success: false; error: E };
+```
+
+This allows operations to return detailed error messages (e.g., circular reference errors, dependency errors) that can be displayed to the user.
 
 ---
 
 ### ExpressionValidatorService
-
-**Purpose**: Validate mathematical expressions.
-
-**Responsibilities**:
-- Parse expression syntax
-- Check for undefined identifiers
-- Detect syntax errors
-- Return detailed validation results
-
-**Interface**:
-```typescript
-export interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
-
-export class ExpressionValidatorService {
-  validate(expression: string, validIdentifiers: string[]): ValidationResult;
-  
-  private checkSyntax(expression: string): string[];
-  private checkIdentifiers(expression: string, validIdentifiers: string[]): string[];
-  private extractIdentifiers(expression: string): string[];
-}
-```
-
-**Validation Logic**:
-1. **Syntax Validation**: Check for balanced parentheses, valid operators, proper operator placement
-2. **Identifier Validation**: Extract all identifiers from expression and verify each exists in validIdentifiers
-3. **Error Reporting**: Return specific, actionable error messages
-
-**Expression Parsing Strategy**:
-- Use regular expressions to extract identifiers (sequences of alphanumeric characters)
-- Validate operator placement (no consecutive operators, operators not at start/end)
-- Check parentheses balance using stack-based algorithm
-- Support operators: `+`, `-`, `*`, `/`, `(`, `)`
-
----
 
 ### IdentifierValidatorService
 
@@ -596,6 +837,26 @@ export interface Variable {
 
 ---
 
+### IntermediateExpression
+
+Represents a named expression that can reference variables and other intermediate expressions.
+
+```typescript
+export interface IntermediateExpression {
+  name: string;
+  formula: string;
+}
+```
+
+**Validation Rules**:
+- `name`: Must be valid identifier (alphanumeric only)
+- `name`: Must be unique across all variables and intermediate expressions
+- `formula`: Must be a valid mathematical expression
+- `formula`: All identifiers in formula must reference defined variables or other intermediate expressions
+- `formula`: Must not create circular references (direct or indirect)
+
+---
+
 ### Model State
 
 The complete model state managed by ModelService.
@@ -603,7 +864,8 @@ The complete model state managed by ModelService.
 ```typescript
 export interface ModelState {
   variables: Variable[];
-  expression: string;
+  intermediateExpressions: IntermediateExpression[];
+  targetExpression: string;
 }
 ```
 
@@ -728,6 +990,66 @@ A property is a characteristic or behavior that should hold true across all vali
 
 **Validates: Requirements 7.5**
 
+### Property 20: Intermediate Expression Identifier Uniqueness
+
+*For any* new intermediate expression name, the system should prevent creation if an identifier with that name already exists (as a variable or another intermediate expression), and should display an error message indicating the duplicate.
+
+**Validates: Requirements 2.3**
+
+### Property 21: Intermediate Expression Formula Validation
+
+*For any* intermediate expression formula, the validator should mark the expression as invalid if any identifier does not correspond to a defined variable or intermediate expression, and should list all undefined identifiers in the error message.
+
+**Validates: Requirements 2.4, 2.7**
+
+### Property 22: Direct Circular Reference Detection
+
+*For any* intermediate expression that references itself directly in its formula, the system should detect this as a circular reference and prevent creation/update with a descriptive error message.
+
+**Validates: Requirements 4.1, 4.3**
+
+### Property 23: Indirect Circular Reference Detection
+
+*For any* intermediate expression that references itself indirectly through a chain of other expressions (A → B → C → A), the system should detect this as a circular reference and prevent creation/update with a descriptive error message showing the cycle path.
+
+**Validates: Requirements 4.1, 4.4**
+
+### Property 24: Dependency-Based Deletion Prevention
+
+*For any* intermediate expression that is referenced by other expressions, the system should prevent deletion and display which expressions depend on it.
+
+**Validates: Requirements 2.12**
+
+### Property 25: Cascading Validation on Intermediate Expression Edit
+
+*For any* intermediate expression that is edited, if that identifier is referenced in other intermediate expressions or the target expression, those expressions should be automatically re-validated after the edit is saved.
+
+**Validates: Requirements 2.11**
+
+### Property 26: Target Expression Validation
+
+*For any* target expression formula, the validator should mark the expression as invalid if any identifier does not correspond to a defined variable or intermediate expression, and should list all undefined identifiers in the error message.
+
+**Validates: Requirements 3.1, 3.4**
+
+### Property 27: Evaluation Order Correctness
+
+*For any* valid set of intermediate expressions and target expression, the computed evaluation order should ensure that each expression is evaluated only after all expressions it depends on have been evaluated.
+
+**Validates: Requirements 5.2, 5.4, 5.5**
+
+### Property 28: Topological Sort Cycle Detection
+
+*For any* set of intermediate expressions containing a circular reference, the topological sort algorithm should fail to produce a complete evaluation order and should report a circular reference error.
+
+**Validates: Requirements 5.3**
+
+### Property 29: Identifier Namespace Uniqueness
+
+*For any* identifier (variable or intermediate expression), the system should enforce uniqueness across the entire namespace, preventing any variable from having the same name as an intermediate expression and vice versa.
+
+**Validates: Requirements 2.3**
+
 ## Error Handling
 
 ### Validation Errors
@@ -737,7 +1059,7 @@ The system handles validation errors through immediate, inline feedback:
 1. **Identifier Validation Errors**:
    - Empty name: "Name is required"
    - Invalid characters: "Name must contain only alphanumeric characters"
-   - Duplicate name: "A variable with this name already exists"
+   - Duplicate name: "A variable or expression with this name already exists"
 
 2. **Numeric Validation Errors**:
    - Non-numeric input: "Value must be a valid number"
@@ -745,9 +1067,16 @@ The system handles validation errors through immediate, inline feedback:
    - Invalid uniform range: "Maximum must be greater than minimum"
 
 3. **Expression Validation Errors**:
-   - Undefined identifiers: "Undefined identifiers: var1, var2"
+   - Undefined identifiers: "Undefined identifiers: var1, expr2"
    - Syntax errors: "Syntax error: unbalanced parentheses"
    - Invalid operator placement: "Syntax error: unexpected operator at position X"
+
+4. **Circular Reference Errors**:
+   - Direct cycle: "Circular reference detected: A → A"
+   - Indirect cycle: "Circular reference detected: A → B → C → A"
+
+5. **Dependency Errors**:
+   - Cannot delete: "Cannot delete 'expr1' because it is referenced by: expr2, expr3"
 
 ### Error Recovery
 
@@ -759,10 +1088,13 @@ All validation errors are recoverable through user correction:
 
 ### Edge Cases
 
-1. **Empty Model State**: When no variables are defined, the expression validator should handle empty identifier lists gracefully
+1. **Empty Model State**: When no variables or expressions are defined, validators should handle empty identifier lists gracefully
 2. **Expression with All Identifiers Deleted**: If all identifiers used in an expression are deleted, the expression should show all as undefined
 3. **Rapid State Changes**: Signal-based reactivity ensures UI consistency even with rapid add/edit/delete operations
 4. **Special Numeric Values**: The system should handle edge cases like very large numbers, very small numbers, zero, and negative numbers appropriately
+5. **Complex Dependency Chains**: The system should correctly handle long chains of dependencies (A → B → C → D → E)
+6. **Multiple Circular References**: If multiple cycles exist, the system should detect and report at least one
+7. **Self-Reference in Edit**: When editing an expression, the system should allow it to reference its old self (before the update) but detect if the new formula creates a cycle
 
 ## Testing Strategy
 
@@ -873,13 +1205,18 @@ src/app/model-builder/
 │   ├── model-builder.component.spec.ts
 │   ├── variable-list.component.spec.ts
 │   ├── variable-form.component.spec.ts
-│   ├── expression-input.component.spec.ts
+│   ├── intermediate-expression-list.component.spec.ts
+│   ├── intermediate-expression-form.component.spec.ts
+│   ├── target-expression-input.component.spec.ts
 │   ├── model.service.spec.ts
 │   ├── expression-validator.service.spec.ts
 │   ├── identifier-validator.service.spec.ts
+│   ├── dependency-graph.service.spec.ts
 │   └── properties/
 │       ├── identifier-validation.property.spec.ts
 │       ├── expression-validation.property.spec.ts
 │       ├── cascading-validation.property.spec.ts
+│       ├── circular-reference-detection.property.spec.ts
+│       ├── dependency-graph.property.spec.ts
 │       └── form-validation.property.spec.ts
 ```
