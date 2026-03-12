@@ -1,6 +1,7 @@
 pub mod greet;
 pub mod histogram;
 pub mod simulation;
+pub mod sim_engine;
 
 use shaku::module;
 
