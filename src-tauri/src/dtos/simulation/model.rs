@@ -5,7 +5,8 @@ use super::distribution::Distribution;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModelDefinition {
     pub variables: Vec<Variable>,
-    pub expression: String,
+    pub intermediate_expressions: Vec<IntermediateExpression>,
+    pub target_expression: String,
     pub iteration_count: usize,
 }
 
@@ -13,4 +14,10 @@ pub struct ModelDefinition {
 pub struct Variable {
     pub name: String,
     pub distribution: Distribution,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IntermediateExpression {
+    pub name: String,
+    pub expression: String,
 }

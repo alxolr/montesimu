@@ -1,4 +1,4 @@
-use crate::services::sim_engine::lexer::{Token, tokenize};
+use crate::services::simulation::lexer::{Token, tokenize};
 
 #[test]
 fn test_tokenize_number() {

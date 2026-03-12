@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use crate::services::sim_engine::parser::{Expr, parse_expression};
-use crate::services::sim_engine::analyzer::{extract_identifiers, build_dependency_graph, topological_sort};
+use crate::services::simulation::parser::{Expr, parse_expression};
+use crate::services::simulation::analyzer::{extract_identifiers, build_dependency_graph, topological_sort};
 
 #[test]
 fn test_extract_identifiers_empty() {

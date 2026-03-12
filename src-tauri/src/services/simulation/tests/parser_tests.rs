@@ -1,4 +1,4 @@
-use crate::services::sim_engine::parser::{Expr, Operator, parse_expression, validate_syntax};
+use crate::services::simulation::parser::{Expr, Operator, parse_expression, validate_syntax};
 
 #[test]
 fn test_operator_display() {
