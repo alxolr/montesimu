@@ -334,6 +334,131 @@ pub fn extract_identifiers(expr: &Expr) -> HashSet<String> {
     extract_identifiers_recursive(expr, &mut identifiers);
     identifiers
 }
+/// Builds a dependency graph showing which expressions reference which identifiers
+///
+/// # Arguments
+/// * `intermediate_exprs` - Map of intermediate expression names to their parsed ASTs
+/// * `target_expr` - The target expression AST
+///
+/// # Returns
+/// A HashMap where keys are expression names and values are sets of identifiers they depend on
+/// The target expression is represented with the key "__target__"
+pub fn build_dependency_graph(
+    intermediate_exprs: &std::collections::HashMap<String, Expr>,
+    target_expr: &Expr,
+) -> std::collections::HashMap<String, HashSet<String>> {
+    use std::collections::HashMap;
+
+    let mut graph = HashMap::new();
+
+    // Add dependencies for each intermediate expression
+    for (name, expr) in intermediate_exprs {
+        let dependencies = extract_identifiers(expr);
+        graph.insert(name.clone(), dependencies);
+    }
+
+    // Add dependencies for target expression
+    let target_dependencies = extract_identifiers(target_expr);
+    graph.insert("__target__".to_string(), target_dependencies);
+
+    graph
+}
+/// Performs topological sort on the dependency graph to determine evaluation order
+///
+/// # Arguments
+/// * `intermediate_exprs` - Map of intermediate expression names to their parsed ASTs
+/// * `target_expr` - The target expression AST
+///
+/// # Returns
+/// A vector of expression names in the order they should be evaluated
+/// Returns an error if circular dependencies are detected
+///
+/// # Example
+/// If expr1 depends on x, expr2 depends on expr1, and target depends on expr2,
+/// the evaluation order would be: ["expr1", "expr2"]
+pub fn topological_sort(
+    intermediate_exprs: &std::collections::HashMap<String, Expr>,
+    target_expr: &Expr,
+) -> Result<Vec<String>, String> {
+    use std::collections::{HashMap, HashSet, VecDeque};
+
+    // Build the dependency graph
+    let dep_graph = build_dependency_graph(intermediate_exprs, target_expr);
+
+    // Separate variables from expressions
+    let expr_names: HashSet<String> = intermediate_exprs.keys().cloned().collect();
+
+    // Build adjacency list (only for expressions, not variables)
+    let mut adj_list: HashMap<String, Vec<String>> = HashMap::new();
+    let mut in_degree: HashMap<String, usize> = HashMap::new();
+
+    // Initialize in-degree for all expressions
+    for name in &expr_names {
+        in_degree.insert(name.clone(), 0);
+        adj_list.insert(name.clone(), Vec::new());
+    }
+
+    // Build adjacency list and calculate in-degrees
+    for (expr_name, dependencies) in &dep_graph {
+        // Skip target expression
+        if expr_name == "__target__" {
+            continue;
+        }
+
+        for dep in dependencies {
+            // Only consider dependencies on other expressions (not variables)
+            if expr_names.contains(dep) {
+                // dep -> expr_name (dep must be evaluated before expr_name)
+                adj_list.get_mut(dep).unwrap().push(expr_name.clone());
+                *in_degree.get_mut(expr_name).unwrap() += 1;
+            }
+        }
+    }
+
+    // Kahn's algorithm for topological sort
+    let mut queue: VecDeque<String> = VecDeque::new();
+    let mut result: Vec<String> = Vec::new();
+
+    // Start with expressions that have no dependencies on other expressions
+    for (name, &degree) in &in_degree {
+        if degree == 0 {
+            queue.push_back(name.clone());
+        }
+    }
+
+    while let Some(current) = queue.pop_front() {
+        result.push(current.clone());
+
+        // Reduce in-degree for all neighbors
+        if let Some(neighbors) = adj_list.get(&current) {
+            for neighbor in neighbors {
+                let degree = in_degree.get_mut(neighbor).unwrap();
+                *degree -= 1;
+                if *degree == 0 {
+                    queue.push_back(neighbor.clone());
+                }
+            }
+        }
+    }
+
+    // Check for circular dependencies
+    if result.len() != expr_names.len() {
+        // Find the expressions involved in the cycle
+        let sorted_set: HashSet<String> = result.iter().cloned().collect();
+        let cycle_exprs: Vec<String> = expr_names
+            .iter()
+            .filter(|name| !sorted_set.contains(*name))
+            .cloned()
+            .collect();
+
+        return Err(format!(
+            "Circular dependency detected among expressions: {}",
+            cycle_exprs.join(", ")
+        ));
+    }
+
+    Ok(result)
+}
 
 fn extract_identifiers_recursive(expr: &Expr, identifiers: &mut HashSet<String>) {
     match expr {
@@ -806,5 +931,395 @@ mod tests {
         let result = tokenize("1 + @ + 2");
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Unexpected character"));
+    }
+
+    // Dependency graph tests
+    #[test]
+    fn test_build_dependency_graph_empty() {
+        use std::collections::HashMap;
+        
+        let intermediate_exprs = HashMap::new();
+        let target_expr = parse_expression("42").unwrap();
+        
+        let graph = build_dependency_graph(&intermediate_exprs, &target_expr);
+        
+        // Should only have target expression
+        assert_eq!(graph.len(), 1);
+        assert!(graph.contains_key("__target__"));
+        assert_eq!(graph.get("__target__").unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_build_dependency_graph_target_with_variables() {
+        use std::collections::HashMap;
+        
+        let intermediate_exprs = HashMap::new();
+        let target_expr = parse_expression("x + y").unwrap();
+        
+        let graph = build_dependency_graph(&intermediate_exprs, &target_expr);
+        
+        assert_eq!(graph.len(), 1);
+        let target_deps = graph.get("__target__").unwrap();
+        assert_eq!(target_deps.len(), 2);
+        assert!(target_deps.contains("x"));
+        assert!(target_deps.contains("y"));
+    }
+
+    #[test]
+    fn test_build_dependency_graph_with_intermediate_expressions() {
+        use std::collections::HashMap;
+        
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("expr1".to_string(), parse_expression("x + y").unwrap());
+        intermediate_exprs.insert("expr2".to_string(), parse_expression("z * 2").unwrap());
+        
+        let target_expr = parse_expression("expr1 + expr2").unwrap();
+        
+        let graph = build_dependency_graph(&intermediate_exprs, &target_expr);
+        
+        assert_eq!(graph.len(), 3);
+        
+        // Check expr1 dependencies
+        let expr1_deps = graph.get("expr1").unwrap();
+        assert_eq!(expr1_deps.len(), 2);
+        assert!(expr1_deps.contains("x"));
+        assert!(expr1_deps.contains("y"));
+        
+        // Check expr2 dependencies
+        let expr2_deps = graph.get("expr2").unwrap();
+        assert_eq!(expr2_deps.len(), 1);
+        assert!(expr2_deps.contains("z"));
+        
+        // Check target dependencies
+        let target_deps = graph.get("__target__").unwrap();
+        assert_eq!(target_deps.len(), 2);
+        assert!(target_deps.contains("expr1"));
+        assert!(target_deps.contains("expr2"));
+    }
+
+    #[test]
+    fn test_build_dependency_graph_mixed_references() {
+        use std::collections::HashMap;
+        
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("expr1".to_string(), parse_expression("x * 2").unwrap());
+        
+        // Target references both a variable and an intermediate expression
+        let target_expr = parse_expression("expr1 + y").unwrap();
+        
+        let graph = build_dependency_graph(&intermediate_exprs, &target_expr);
+        
+        assert_eq!(graph.len(), 2);
+        
+        // Check expr1 dependencies
+        let expr1_deps = graph.get("expr1").unwrap();
+        assert_eq!(expr1_deps.len(), 1);
+        assert!(expr1_deps.contains("x"));
+        
+        // Check target dependencies (should have both expr1 and y)
+        let target_deps = graph.get("__target__").unwrap();
+        assert_eq!(target_deps.len(), 2);
+        assert!(target_deps.contains("expr1"));
+        assert!(target_deps.contains("y"));
+    }
+
+    #[test]
+    fn test_build_dependency_graph_complex_expressions() {
+        use std::collections::HashMap;
+        
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("x + y").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("a * z").unwrap());
+        intermediate_exprs.insert("c".to_string(), parse_expression("w / 2").unwrap());
+        
+        let target_expr = parse_expression("(b + c) * a").unwrap();
+        
+        let graph = build_dependency_graph(&intermediate_exprs, &target_expr);
+        
+        assert_eq!(graph.len(), 4);
+        
+        // Check a dependencies
+        let a_deps = graph.get("a").unwrap();
+        assert_eq!(a_deps.len(), 2);
+        assert!(a_deps.contains("x"));
+        assert!(a_deps.contains("y"));
+        
+        // Check b dependencies (references a and z)
+        let b_deps = graph.get("b").unwrap();
+        assert_eq!(b_deps.len(), 2);
+        assert!(b_deps.contains("a"));
+        assert!(b_deps.contains("z"));
+        
+        // Check c dependencies
+        let c_deps = graph.get("c").unwrap();
+        assert_eq!(c_deps.len(), 1);
+        assert!(c_deps.contains("w"));
+        
+        // Check target dependencies
+        let target_deps = graph.get("__target__").unwrap();
+        assert_eq!(target_deps.len(), 3);
+        assert!(target_deps.contains("b"));
+        assert!(target_deps.contains("c"));
+        assert!(target_deps.contains("a"));
+    }
+
+    #[test]
+    fn test_build_dependency_graph_no_duplicates() {
+        use std::collections::HashMap;
+        
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("expr1".to_string(), parse_expression("x + x + x").unwrap());
+        
+        let target_expr = parse_expression("expr1 + expr1").unwrap();
+        
+        let graph = build_dependency_graph(&intermediate_exprs, &target_expr);
+        
+        // expr1 should only list x once
+        let expr1_deps = graph.get("expr1").unwrap();
+        assert_eq!(expr1_deps.len(), 1);
+        assert!(expr1_deps.contains("x"));
+        
+        // target should only list expr1 once
+        let target_deps = graph.get("__target__").unwrap();
+        assert_eq!(target_deps.len(), 1);
+        assert!(target_deps.contains("expr1"));
+    }
+    // Topological sort tests
+    #[test]
+    fn test_topological_sort_no_expressions() {
+        use std::collections::HashMap;
+
+        let intermediate_exprs = HashMap::new();
+        let target_expr = parse_expression("x + y").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr).unwrap();
+
+        // No intermediate expressions, so result should be empty
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_topological_sort_single_expression() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("expr1".to_string(), parse_expression("x + y").unwrap());
+
+        let target_expr = parse_expression("expr1 * 2").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr).unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], "expr1");
+    }
+
+    #[test]
+    fn test_topological_sort_linear_dependency() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("x + y").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("a * 2").unwrap());
+        intermediate_exprs.insert("c".to_string(), parse_expression("b + 5").unwrap());
+
+        let target_expr = parse_expression("c / 3").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr).unwrap();
+
+        assert_eq!(result.len(), 3);
+
+        // a must come before b, b must come before c
+        let a_pos = result.iter().position(|x| x == "a").unwrap();
+        let b_pos = result.iter().position(|x| x == "b").unwrap();
+        let c_pos = result.iter().position(|x| x == "c").unwrap();
+
+        assert!(a_pos < b_pos);
+        assert!(b_pos < c_pos);
+    }
+
+    #[test]
+    fn test_topological_sort_independent_expressions() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("x + y").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("z * 2").unwrap());
+        intermediate_exprs.insert("c".to_string(), parse_expression("w / 3").unwrap());
+
+        let target_expr = parse_expression("a + b + c").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr).unwrap();
+
+        // All three expressions are independent, so all should be in result
+        assert_eq!(result.len(), 3);
+        assert!(result.contains(&"a".to_string()));
+        assert!(result.contains(&"b".to_string()));
+        assert!(result.contains(&"c".to_string()));
+    }
+
+    #[test]
+    fn test_topological_sort_diamond_dependency() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("x + y").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("a * 2").unwrap());
+        intermediate_exprs.insert("c".to_string(), parse_expression("a * 3").unwrap());
+        intermediate_exprs.insert("d".to_string(), parse_expression("b + c").unwrap());
+
+        let target_expr = parse_expression("d / 2").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr).unwrap();
+
+        assert_eq!(result.len(), 4);
+
+        // a must come before b and c
+        let a_pos = result.iter().position(|x| x == "a").unwrap();
+        let b_pos = result.iter().position(|x| x == "b").unwrap();
+        let c_pos = result.iter().position(|x| x == "c").unwrap();
+        let d_pos = result.iter().position(|x| x == "d").unwrap();
+
+        assert!(a_pos < b_pos);
+        assert!(a_pos < c_pos);
+        assert!(b_pos < d_pos);
+        assert!(c_pos < d_pos);
+    }
+
+    #[test]
+    fn test_topological_sort_circular_dependency_simple() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("b + 1").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("a + 1").unwrap());
+
+        let target_expr = parse_expression("a + b").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr);
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Circular dependency detected"));
+        assert!(err.contains("a") || err.contains("b"));
+    }
+
+    #[test]
+    fn test_topological_sort_circular_dependency_complex() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("b + 1").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("c + 1").unwrap());
+        intermediate_exprs.insert("c".to_string(), parse_expression("a + 1").unwrap());
+
+        let target_expr = parse_expression("a").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr);
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Circular dependency detected"));
+    }
+
+    #[test]
+    fn test_topological_sort_self_reference() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("a + 1").unwrap());
+
+        let target_expr = parse_expression("a * 2").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr);
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Circular dependency detected"));
+        assert!(err.contains("a"));
+    }
+
+    #[test]
+    fn test_topological_sort_mixed_dependencies() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("x + y").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("a + z").unwrap());
+        intermediate_exprs.insert("c".to_string(), parse_expression("w * 2").unwrap());
+        intermediate_exprs.insert("d".to_string(), parse_expression("b + c").unwrap());
+
+        let target_expr = parse_expression("d + a").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr).unwrap();
+
+        assert_eq!(result.len(), 4);
+
+        // a must come before b and d
+        let a_pos = result.iter().position(|x| x == "a").unwrap();
+        let b_pos = result.iter().position(|x| x == "b").unwrap();
+        let d_pos = result.iter().position(|x| x == "d").unwrap();
+
+        assert!(a_pos < b_pos);
+        assert!(b_pos < d_pos);
+
+        // c must come before d
+        let c_pos = result.iter().position(|x| x == "c").unwrap();
+        assert!(c_pos < d_pos);
+    }
+
+    #[test]
+    fn test_topological_sort_only_variable_dependencies() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("x + y").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("z * w").unwrap());
+
+        let target_expr = parse_expression("a + b").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr).unwrap();
+
+        // Both expressions only depend on variables, so they can be in any order
+        assert_eq!(result.len(), 2);
+        assert!(result.contains(&"a".to_string()));
+        assert!(result.contains(&"b".to_string()));
+    }
+
+    #[test]
+    fn test_topological_sort_partial_circular() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("x + y").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("c + 1").unwrap());
+        intermediate_exprs.insert("c".to_string(), parse_expression("b + 1").unwrap());
+
+        let target_expr = parse_expression("a + b").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr);
+
+        // b and c form a cycle, so this should fail
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Circular dependency detected"));
+    }
+
+    #[test]
+    fn test_topological_sort_long_chain() {
+        use std::collections::HashMap;
+
+        let mut intermediate_exprs = HashMap::new();
+        intermediate_exprs.insert("a".to_string(), parse_expression("x + 1").unwrap());
+        intermediate_exprs.insert("b".to_string(), parse_expression("a + 1").unwrap());
+        intermediate_exprs.insert("c".to_string(), parse_expression("b + 1").unwrap());
+        intermediate_exprs.insert("d".to_string(), parse_expression("c + 1").unwrap());
+        intermediate_exprs.insert("e".to_string(), parse_expression("d + 1").unwrap());
+
+        let target_expr = parse_expression("e").unwrap();
+
+        let result = topological_sort(&intermediate_exprs, &target_expr).unwrap();
+
+        assert_eq!(result.len(), 5);
+        assert_eq!(result, vec!["a", "b", "c", "d", "e"]);
     }
 }

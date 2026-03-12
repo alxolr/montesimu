@@ -35,17 +35,17 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
     - Return descriptive error messages
     - _Requirements: 3.5_
   
-  - [ ] 2.5 Implement identifier extraction
+  - [x] 2.5 Implement identifier extraction
     - Extract all unique identifiers from AST
     - Return list of variable/expression references
     - _Requirements: 3.3_
   
-  - [ ] 2.6 Implement dependency graph builder
+  - [x] 2.6 Implement dependency graph builder
     - Build graph showing which expressions reference which identifiers
     - Support both variable and intermediate expression references
     - _Requirements: 3.4_
   
-  - [ ] 2.7 Implement topological sort for evaluation order
+  - [x] 2.7 Implement topological sort for evaluation order
     - Perform topological sort on dependency graph
     - Return evaluation order for expressions
     - Detect circular references
