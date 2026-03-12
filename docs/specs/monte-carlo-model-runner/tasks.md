@@ -29,7 +29,7 @@ This implementation plan breaks down the Monte Carlo Model Runner feature into i
     - Handle parentheses for grouping
     - _Requirements: 3.2_
   
-  - [ ] 2.4 Implement syntax error detection
+  - [x] 2.4 Implement syntax error detection
     - Detect unbalanced parentheses
     - Detect invalid operator placement
     - Return descriptive error messages

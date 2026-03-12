@@ -217,13 +217,64 @@ impl Parser {
                         self.advance();
                         Ok(expr)
                     }
-                    _ => Err("Expected closing parenthesis".to_string()),
+                    Some(token) => Err(format!(
+                        "Expected closing parenthesis, found: {:?}",
+                        token
+                    )),
+                    None => Err("Expected closing parenthesis, found end of expression".to_string()),
                 }
             }
-            Some(token) => Err(format!("Unexpected token: {:?}", token)),
+            Some(Token::Plus) | Some(Token::Minus) | Some(Token::Star) | Some(Token::Slash) => {
+                Err(format!(
+                    "Unexpected operator at position {}: {:?}",
+                    self.position,
+                    self.current()
+                ))
+            }
+            Some(Token::RightParen) => {
+                Err(format!("Unexpected closing parenthesis at position {}", self.position))
+            }
             None => Err("Unexpected end of expression".to_string()),
         }
     }
+}
+
+/// Validates expression syntax and returns detailed error messages
+pub fn validate_syntax(input: &str) -> Result<(), String> {
+    // Check for balanced parentheses
+    let mut paren_count = 0;
+    let mut paren_positions = Vec::new();
+    
+    for (i, ch) in input.chars().enumerate() {
+        match ch {
+            '(' => {
+                paren_count += 1;
+                paren_positions.push((i, '('));
+            }
+            ')' => {
+                paren_count -= 1;
+                if paren_count < 0 {
+                    return Err(format!("Unbalanced parentheses: unexpected ')' at position {}", i));
+                }
+                paren_positions.push((i, ')'));
+            }
+            _ => {}
+        }
+    }
+    
+    if paren_count > 0 {
+        let unclosed = paren_positions.iter()
+            .filter(|(_, ch)| *ch == '(')
+            .map(|(pos, _)| pos.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        return Err(format!("Unbalanced parentheses: unclosed '(' at position(s): {}", unclosed));
+    }
+    
+    // Try to parse the expression
+    parse_expression(input)?;
+    
+    Ok(())
 }
 
 /// Parses an expression string into an AST
@@ -662,5 +713,98 @@ mod tests {
     fn test_parse_trailing_operator() {
         let result = parse_expression("1 + 2 +");
         assert!(result.is_err());
+    }
+
+    // Syntax error detection tests
+    #[test]
+    fn test_validate_syntax_valid() {
+        assert!(validate_syntax("1 + 2").is_ok());
+        assert!(validate_syntax("(a + b) * c").is_ok());
+        assert!(validate_syntax("x / (y - 3)").is_ok());
+    }
+
+    #[test]
+    fn test_validate_syntax_unbalanced_parens_missing_close() {
+        let result = validate_syntax("(1 + 2");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Unbalanced parentheses"));
+        assert!(err.contains("unclosed"));
+    }
+
+    #[test]
+    fn test_validate_syntax_unbalanced_parens_extra_close() {
+        let result = validate_syntax("1 + 2)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Unbalanced parentheses"));
+        assert!(err.contains("unexpected ')'"));
+    }
+
+    #[test]
+    fn test_validate_syntax_consecutive_operators() {
+        let result = validate_syntax("1 + + 2");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Unexpected operator"));
+    }
+
+    #[test]
+    fn test_validate_syntax_operator_at_start() {
+        let result = validate_syntax("+ 1 + 2");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Unexpected operator"));
+    }
+
+    #[test]
+    fn test_validate_syntax_operator_at_end() {
+        let result = validate_syntax("1 + 2 *");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_syntax_empty_parentheses() {
+        let result = validate_syntax("()");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_syntax_nested_unbalanced() {
+        let result = validate_syntax("((1 + 2)");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.contains("Unbalanced parentheses"));
+    }
+
+    #[test]
+    fn test_parse_error_missing_operand() {
+        let result = parse_expression("1 +");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_error_double_operator() {
+        let result = parse_expression("1 * / 2");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_error_only_operator() {
+        let result = parse_expression("+");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_error_mismatched_parens() {
+        let result = parse_expression("(1 + 2))");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_tokenize_invalid_char() {
+        let result = tokenize("1 + @ + 2");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Unexpected character"));
     }
 }
